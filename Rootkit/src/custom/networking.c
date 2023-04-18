@@ -4,10 +4,10 @@
 #include<net/sock.h>
 
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024 //size of buffer
 
 struct Server{
-	struct sockaddr_in s_addr;
+	struct sockaddr_in s_addr; 
 	struct socket *sock;
 	struct kvec sock_vec;
 	struct msghdr sock_msg;

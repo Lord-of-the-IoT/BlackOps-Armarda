@@ -1,3 +1,7 @@
+/*
+file for the all of the hooked functions and other relevant code
+*/
+
 	/*=========================================*\
 		generic functions to be used by hooks
 	\*=========================================*/

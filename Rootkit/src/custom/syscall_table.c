@@ -13,37 +13,28 @@
 
 
 
-//syscall table adress
-unsigned long * __sys_call_table = NULL;  //NULL = (void*)0
-/* typedef for kallsyms_lookup_name() so kp.addr can be easily cast, and makes formatting nicer*/
-typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
-//function for kallysms_lookup_name_workaround definition
-kallsyms_lookup_name_t kallsyms_lookup_name_workaround=(kallsyms_lookup_name_t) 0;
-//function to generate kallsyms_lookup_name
-static void generate_kallsyms_lookup_name_workaround(void);
+unsigned long * __sys_call_table = NULL;  //syscall table adress NULL = (void*)0
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name); //typedef for kallsyms_lookup_name() so kp.addr can be easily cast, and makes formatting nicer
+kallsyms_lookup_name_t kallsyms_lookup_name_workaround=(kallsyms_lookup_name_t) 0; //function for kallysms_lookup_name_workaround definition
+static void generate_kallsyms_lookup_name_workaround(void); //function to generate kallsyms_lookup_name
 
 
 
-// finds the memory adress of the sycall table and stores it in __sys_call_table
-static void get_syscall_table(void){
+static int get_syscall_table(void){ // finds the memory adress of the sycall table and stores it in __sys_call_table
 	//checks if kallsyms_lookup_name has been created
-	if (kallsyms_lookup_name_workaround==(kallsyms_lookup_name_t) NULL){
-		generate_kallsyms_lookup_name_workaround();
+	if (kallsyms_lookup_name_workaround==(kallsyms_lookup_name_t) NULL){ //if kallsysms_lookup_name_workaround is NULL
+		generate_kallsyms_lookup_name_workaround(); //gets adress of kallsyms_lookup_name
 	}
-	 __sys_call_table = (unsigned long*) kallsyms_lookup_name_workaround("sys_call_table");
-	return;
+	 __sys_call_table = (unsigned long*) kallsyms_lookup_name_workaround("sys_call_table"); //sets syscall_tabel to syscall_table adress
+	return 0; //returns 0 for no error
 }
 
 
-//uses kprobe to find the memory adress of kallsyms_lookup_name and creates function
-static void generate_kallsyms_lookup_name_workaround(void){
+static void generate_kallsyms_lookup_name_workaround(void){ //uses kprobe to find the memory adress of kallsyms_lookup_name and creates function
 	struct kprobe kp = { //kprobe definition
 		.symbol_name = "kallsyms_lookup_name"
 	};
-	/* register the kallsyms_lookup_name kprobe*/
-	register_kprobe(&kp);
-	/* assign kallsyms_lookup_name symbol to kp.addr */
-	kallsyms_lookup_name_workaround = (kallsyms_lookup_name_t) kp.addr;
-	/* done with the kallsyms_lookup_name kprobe, so unregister it */
-	unregister_kprobe(&kp);
+	register_kprobe(&kp); // register the kallsyms_lookup_name kprobe
+	kallsyms_lookup_name_workaround = (kallsyms_lookup_name_t) kp.addr; // assign kallsyms_lookup_name symbol to kp.addr
+	unregister_kprobe(&kp); // done with the kallsyms_lookup_name kprobe, so unregister it
   }

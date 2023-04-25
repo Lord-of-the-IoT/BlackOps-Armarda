@@ -3,7 +3,9 @@ a Linux kernel module with [remote access](#remote-access-server) for post explo
 
 > **Warning**: the code is still in development and is currently not stable for use
 
-## **Rootkit functionalities**
+<br><br>
+
+## **Rootkit functionalities Summary**
 
 ### obscurity
 - [hide files/directories](#hide-filesdirectories)
@@ -30,13 +32,16 @@ a Linux kernel module with [remote access](#remote-access-server) for post explo
 - derives session key with MQV-like algorithm
 - server hidden, and only visible to certain Ip adresses if correct port knocking sequence used
 
+<br><br>
 
 ## **LKM Build and Installation**
 ### Build
 to build the LKM, install the src directory, and run the Makefile with the `make` command. a number of files will be created, but the rootkit.ko is the important one.
 ### installation
-if built on a different computer, copy the rootkit.ko file to the target machine, then run `insmod rootkit.ko`. normally requires root priveleges to use `insmod`
+if built on a different computer, copy the rootkit.ko file to the target machine, then run `insmod core.ko`. normally requires root priveleges to use `insmod`
 > **Warning**: if compiled on a different OS or kernel version, the rootkit.ko file may not work, as it is OS and Version specific
+
+<br><br>
 
 ## **Rootkit functionalities**
 

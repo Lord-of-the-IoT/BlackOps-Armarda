@@ -24,9 +24,10 @@ struct server_t{
 	int port;
 };
 
-struct client_t client; //global variable holding  data associated with client for easy access by all functions
+struct client_t client; //global variable holding data associated with client for easy access by all functions
 
-extern static int client_handler(void); //declares client handler function as external
+extern int client_handler(void); //declares client handler function as external
+extern int BUFFER_SIZE; //size of buffers used
 
 /*========================*\
 	networking functions

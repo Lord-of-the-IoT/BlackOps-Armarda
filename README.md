@@ -1,5 +1,5 @@
 # **BlackOps Armarda**
-an armarda of hacking tools for undetectable post exploitation and exploitation. all network traffic utilises cryptographic algorithms from the [commercial national security suite](https://en.wikipedia.org/wiki/Commercial_National_Security_Algorithm_Suite).
+an armarda of hacking tools for undetectable post exploitation and exploitation. all network traffic utilises cryptographic algorithms from the [CNSA](https://en.wikipedia.org/wiki/Commercial_National_Security_Algorithm_Suite).
 > **Warning** this toolkit is still in development, and is currently not stable
 
 

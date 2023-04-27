@@ -1,5 +1,5 @@
 # Remote Access Rootkit
-a Linux kernel module with [remote access](#remote-access-server) for post exploitation and surveillence. encrypts all networking traffic. hides server and requires port knocking to add IP adress to view server. when client connects [shell]() between client and rootkit initiated
+a Linux kernel module with [remote access](#remote-access-server) for post exploitation and surveillence. encrypts all networking traffic. hides server and requires port knocking to add IP adress whitelist of IP adressas able to view server. when client connects [shell]() between client and rootkit initiated
 
 > **Warning**: the code is still in development and is currently not stable for use
 

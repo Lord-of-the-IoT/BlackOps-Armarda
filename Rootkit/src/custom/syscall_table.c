@@ -25,7 +25,7 @@ static int get_syscall_table(void){ // finds the memory adress of the sycall tab
 	if (kallsyms_lookup_name_workaround==(kallsyms_lookup_name_t) NULL){ //if kallsysms_lookup_name_workaround is NULL
 		generate_kallsyms_lookup_name_workaround(); //gets adress of kallsyms_lookup_name
 	}
-	 __sys_call_table = (unsigned long*) kallsyms_lookup_name_workaround("sys_call_table"); //sets syscall_tabel to syscall_table adress
+	 __sys_call_table = (unsigned long*) kallsyms_lookup_name_workaround("sys_call_table"); //sets syscall_table to syscall_table adress
 	return 0; //returns 0 for no error
 }
 

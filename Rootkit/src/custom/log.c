@@ -17,8 +17,10 @@ static int close_logging(void){
 }
 
 static int log(char *message){ //logs message to log_file
+	printk("logging \"%s\" length = %i\n", message, strlen((char *) message));
 	file_write(log_file, (void *) message, strlen((char *) message));
 	return 0;
+
 }
 
 static int get_logs(char *buffer){

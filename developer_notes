@@ -1,0 +1,36 @@
+dev comments
+---------------------------------------------------------------------------
+|  //ERROR <reason>   | an error in the code that does/could cause crash  |
+|  //UPDATE <reason>  | something that works but needs to be changed      |
+|  //CHECK <reason>   | unsure if code can cause an error                 |
+---------------------------------------------------------------------------
+
+message format for a printk debug
+	[rootkit][<file>::<function>] <ERROR/DEBUG>    <debug information to be provided>
+	
+message format for log function
+	[<file>::<function>]
+	
+
+current changes occuring
+--------------------------------------------------------------
+|  custom/ directory                | renamed to includes/   |
+|  fd member of files.c::kern_file  | renamed to fp          |
+--------------------------------------------------------------
+
+
+
+files updated
+------------------------------
+|  core.c              |  ^  |
+|  files.c             |  ^  |
+|  hooked_syscalls.c   |  X  |
+|  hooked_syscalls.h   |  X  |
+|  hooks.c             |  X  |
+|  log.c               |  ^  |
+|  server.c            |  X  |
+|  server.h            |  X  |
+|  syscall_table.c     |  X  |
+|  encryption.c        |  X  |
+|  keys.c              |  X  |
+------------------------------

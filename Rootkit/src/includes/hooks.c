@@ -25,8 +25,8 @@ static int remove_hook(struct hook_t *hook); //restores syscall in the table to 
 
 
 static ptregs_t locate_syscall(int syscall){
-	ptregs_t syscall = (ptregs_t) __sys_call_table[syscall]; //looks up the syscall in the table
-	return syscall;
+	ptregs_t syscall_loc = (ptregs_t) __sys_call_table[syscall]; //looks up the syscall in the table
+	return syscall_loc;
 }
 
 static int write_cr0_forced(unsigned long val){
@@ -60,14 +60,14 @@ static int install_hook(struct hook_t *hook){
 		return -1;
 	};
 	if (set_memory_protection(false)){
-		log("[hooks.c::install_hook] ERROR    unable to disable memory protection\n");
+		log_msg("[hooks.c::install_hook] ERROR    unable to disable memory protection\n");
 		return -1;
 	};
 
 	__sys_call_table[hook->syscall_number] = (long unsigned int) hook->hooked_syscall; //rewrites the adress of the syscall to hooked function
 
 	if (set_memory_protection(true)){  //enables memory protection in cr0- if true memory cannot be reenabled
-		log("[hooks.c::install_hook] ERROR    unable to enable memory protection\n");
+		log_msg("[hooks.c::install_hook] ERROR    unable to enable memory protection\n");
 		return -1;
 	};
 	return 0;
@@ -75,16 +75,16 @@ static int install_hook(struct hook_t *hook){
 
 static int remove_hook(struct hook_t *hook){
 	if (!hook->orig_syscall){ //if unable to get original syscall
-		log("[hooks.c::install_hook] ERROR    orig_syscall not a memory adress\n");
+		log_msg("[hooks.c::install_hook] ERROR    orig_syscall not a memory adress\n");
 		return -1;
 	};
 	if (set_memory_protection(false)){
-		log("[hooks.c::remove_hook] ERROR    unable to disable memory protection\n"); //prints message on server
+		log_msg("[hooks.c::remove_hook] ERROR    unable to disable memory protection\n"); //prints message on server
 		return -1;
 	};
 	__sys_call_table[hook->syscall_number] = (long unsigned int) hook->orig_syscall;
 	if (set_memory_protection(true)){
-		log("[hooks.c::remove_hook] ERROR    unable to enable memory protection\n\n");
+		log_msg("[hooks.c::remove_hook] ERROR    unable to enable memory protection\n\n");
 		return -1;
 	};
 	return 0;

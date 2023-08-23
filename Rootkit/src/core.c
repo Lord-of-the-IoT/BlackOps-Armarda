@@ -42,7 +42,9 @@ static void __exit ModuleExit(void) {
 	remove_hook(&sys_getdents64);
 	log_msg("[core.c::ModuleExit] removed all hooks");
 	remove_server();
+	printk("[rootkit][core.c::ModuleExit] DEBUG    server removed");
 	close_logging();
+	printk("[rootkit][core.c::ModuleExit] DEBUG    logging closed removed");
 }
 
 module_init(ModuleInit);

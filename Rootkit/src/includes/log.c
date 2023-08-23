@@ -17,12 +17,11 @@ static int init_logging(void){//initiates logging ability
 
 static int close_logging(void){
 	file_close(log_file);
-	kfree(log_file);
 	return 0;
 }
 
 static int log_msg(char *message){ //logs message to log_file
-	printk("[rootkit][log.c::log] DEBUG    logging message with length %lu	\n\t%s\n", strlen((char *) message), message); //DEBUG
+	printk("[rootkit][log.c::log] DEBUG    logging message with length %lu       %s", strlen((char *) message), message); //DEBUG
 	if (file_write(log_file, (void *) message, strlen((char *) message))!=0){ //writes to file and checks if any error
 		printk("[log.c::log] ERROR    file_write unable to write all data\n"); //DEBUG
 		return -1;

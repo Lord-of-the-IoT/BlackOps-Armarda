@@ -18,7 +18,7 @@ current changes occuring
 |  custom/ directory                |  renamed to includes/      |
 |  fd member of files.c::kern_file  |  renamed to fp             |
 |  hooks.c::store                   |  renamed to locate_syscall |
-|  log.c::log                       |  renamed tp log_msg
+|  log.c::log                       |  renamed tp log_msg        |
 ------------------------------------------------------------------
 
 

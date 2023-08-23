@@ -22,20 +22,20 @@ current changes occuring
 
 
 
-files updated and transfered to dev vm
-------------------------------------
-|  core.c              |  X  |     |
-|  files.c             |  X  |     |
-|  hooked_syscalls.c   |  X  |     |
-|  hooked_syscalls.h   |  X  |     |
-|  hooks.c             |  X  |     |
-|  log.c               |  X  |     |
-|  server.c            |  X  |     |
-|  server.h            |  X  |     |
-|  syscall_table.c     |  X  |     |
-|  encryption.c        | N/A |     | -|- files just don't work, and am gunna work on them later
-|  keys.c              | N/A |     | -|
-------------------------------------
+files updated
+------------------------------
+|  core.c              |  X  |
+|  files.c             |  X  |
+|  hooked_syscalls.c   |  X  |
+|  hooked_syscalls.h   |  X  |
+|  hooks.c             |  X  |
+|  log.c               |  X  |
+|  server.c            |  X  |
+|  server.h            |  X  |
+|  syscall_table.c     |  X  |
+|  encryption.c        | N/A | --- files just don't work, and am gunna work on them later
+|  keys.c              | N/A | -|
+------------------------------
 
 
 

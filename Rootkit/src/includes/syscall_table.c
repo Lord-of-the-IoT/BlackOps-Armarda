@@ -26,7 +26,7 @@ static int get_syscall_table(void){
 		generate_kallsyms_lookup_name_workaround(); //gets adress of kallsyms_lookup_name
 	}
 	 __sys_call_table = (unsigned long*) kallsyms_lookup_name_workaround("sys_call_table"); //sets syscall_table to syscall_table adress
-	return 0;
+	return 0;	
 }
 
 

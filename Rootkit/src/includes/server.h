@@ -5,7 +5,7 @@
 
 #include <linux/string.h>
 
-extern int BUFFER_SIZE;
+extern int BUFFER_SIZE; //size of buffers used
 extern char ROOTKIT_ID[];
 
 
@@ -16,4 +16,4 @@ static int remove_server(void);
 static int net_send(void);
 static int net_recv(void);
 
-static int client_handler(void);
+static int client_handler(void); //handles the client

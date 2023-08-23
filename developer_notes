@@ -7,10 +7,10 @@ dev comments
 ---------------------------------------------------------------------------------------------------------
 
 message format for a printk debug
-	[rootkit][<file>::<function>] <ERROR/DEBUG>    <debug information to be provided>
+	[rootkit][<file>::<function>] <ERROR/DEBUG>    <information to be provided>: err=<error code>
 	
 message format for log function
-	[<file>::<function>]
+	[<file>::<function>] message:
 	
 
 current changes occuring
@@ -22,20 +22,20 @@ current changes occuring
 
 
 
-files updated
-------------------------------
-|  core.c              |  X  |
-|  files.c             |  X  |
-|  hooked_syscalls.c   |  X  |
-|  hooked_syscalls.h   |  X  |
-|  hooks.c             |     |
-|  log.c               |  X  |
-|  server.c            |     |
-|  server.h            |     |
-|  syscall_table.c     |     |
-|  encryption.c        |     |
-|  keys.c              |     |
-------------------------------
+files updated and transfered to dev vm
+------------------------------------
+|  core.c              |  X  |     |
+|  files.c             |  X  |     |
+|  hooked_syscalls.c   |  X  |     |
+|  hooked_syscalls.h   |  X  |     |
+|  hooks.c             |  X  |     |
+|  log.c               |  X  |     |
+|  server.c            |  X  |     |
+|  server.h            |  X  |     |
+|  syscall_table.c     |  X  |     |
+|  encryption.c        | N/A |     | -|- files just don't work, and am gunna work on them later
+|  keys.c              | N/A |     | -|
+------------------------------------
 
 
 
@@ -73,3 +73,13 @@ function group 1                 -|
                                   |--- 3 lines
                                   |
 function group 2                 -|
+
+
+
+
+
+
+
+rules to follow
+	- always free memory when not in use
+		- eventaully do so not through kfree but own method

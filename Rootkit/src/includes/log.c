@@ -17,6 +17,7 @@ static int init_logging(void){//initiates logging ability
 
 static int close_logging(void){
 	file_close(log_file);
+	kfree(log_file);
 	return 0;
 }
 

@@ -1,30 +1,24 @@
-/*
-	tcp server that accepts one connection at a time
-	sites that helped develop code:
-		https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
-		https://stackoverflow.com/questions/49340626/creating-a-tcp-server-in-the-kernel-in-c
-*/
+/*========================================================*\
+	     tcp server that accepts one connection at a time
+sites that helped develop code:
+https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
+https://stackoverflow.com/questions/49340626/creating-a-tcp-server-in-the-kernel-in-c
+\*========================================================*/
 
 #include <linux/in.h>
 #include <linux/inet.h>
 #include <linux/socket.h>
 #include <net/sock.h>
-
 #include <linux/string.h>
 
 #include "server.h"
 
-
-	/*=============*\
-		networking
-	\*=============*/
-struct client_t{ //structure holding client information
+struct client_t{
 	struct socket *sock; //structure holding socket object
 	struct kvec sock_vec; //holds vector of data recieved
 	struct msghdr sock_msg; //structure to hold data recieved
 	char *message; //structure to hold message sent or recieved
 };
-
 struct server_t{
 	struct sockaddr_in s_addr; //structure to specify a transport address and port for the AF_INET address family
 	struct socket *sock; //structure holding socket object

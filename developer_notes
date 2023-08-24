@@ -85,3 +85,5 @@ function group 2                 -|
 rules to follow
 	- always free memory when not in use
 		- eventaully do so not through kfree but own method
+	- check how many bytes you are reading/writing
+	- check whether u r providing bits or bytes as a param

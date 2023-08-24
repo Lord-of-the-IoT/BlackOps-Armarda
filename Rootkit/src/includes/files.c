@@ -66,12 +66,12 @@ static int file_read(struct kern_file *file, void *buf){
 
 static int file_write(struct kern_file *file, void *buf, int buf_size){
 	//code from https://stackoverflow.com/questions/69633382/using-kernel-read-kernel-write-to-read-input-txts-content-write-it-into-out
-	file->pos = file->count;	
+	file->pos = file->count;
 	file->count+=buf_size;
-	file->ret = kernel_write(file->fp, buf, buf_size*8, &(file->pos)); //writes data to file
-	if (file->ret!=buf_size*8){ //not all bytes writtens
-		printk("[rootkit][files.c::file_write] ERROR    unable to write %ld bytes to file: file->ret=%ld   buf_size=%i\n", buf_size*8-file->ret, file->ret, buf_size);  //DEBUG
-		return buf_size*8-file->ret; //returns number of bytes not written
+	file->ret = kernel_write(file->fp, buf, buf_size, &(file->pos)); //writes data to file
+	if (file->ret!=buf_size){ //not all bytes writtens
+		printk("[rootkit][files.c::file_write] ERROR    unable to write %ld bytes to file: file->ret=%ld   buf_size=%i\n", buf_size-file->ret, file->ret, buf_size);  //DEBUG
+		return buf_size-file->ret; //returns number of bytes not written
 	}
 	return 0;
 

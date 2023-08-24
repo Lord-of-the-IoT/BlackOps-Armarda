@@ -1,0 +1,89 @@
+dev comments
+---------------------------------------------------------------------------------------------------------
+|  //ERROR <reason>   | an error in the code that does/could cause crash                                |
+|  //UPDATE <reason>  | something that works but needs to be changed                                    |
+|  //CHECK <reason>   | unsure if code can cause an error                                               |
+|  //DEBUG <reason>   | a part of code used only for debugging that should be removed after development |
+---------------------------------------------------------------------------------------------------------
+
+message format for a printk debug
+	[rootkit][<file>::<function>] <ERROR/DEBUG>    <information to be provided>: err=<error code>
+	
+message format for log function
+	[<file>::<function>] message:
+	
+
+current changes occuring
+------------------------------------------------------------------
+| IMPORTANT same buffer size for all|  change depending on func  |
+|  custom/ directory                |  renamed to includes/      |
+|  fd member of files.c::kern_file  |  renamed to fp             |
+|  hooks.c::store                   |  renamed to locate_syscall |
+|  log.c::log                       |  renamed tp log_msg        |
+------------------------------------------------------------------
+
+
+
+files updated
+------------------------------
+|  core.c              |  X  |
+|  files.c             |  X  |
+|  hooked_syscalls.c   |  X  |
+|  hooked_syscalls.h   |  X  |
+|  hooks.c             |  X  |
+|  log.c               |  X  |
+|  server.c            |  X  |
+|  server.h            |  X  |
+|  syscall_table.c     |  X  |
+|  encryption.c        | N/A | --- files just don't work, and am gunna work on them later
+|  keys.c              | N/A | -|
+------------------------------
+
+
+
+
+format of major comment (comment type used to signify an important comment or section of code)
+"
+/*========*\
+  
+\*========*/
+
+
+"
+
+
+
+at the top of every file a major comment shall be provided descibing the function of the file
+
+
+
+
+
+file basic layout
+major comment                    -|
+                                  |--- 1 line
+#includes                        -|
+                                  |--- 1 line
+global variables and structures  -|
+                                  |--- 1 line
+function declerations            -|
+                                  |
+                                  |--- 3 lines
+                                  |
+function group 1                 -|
+                                  |
+                                  |--- 3 lines
+                                  |
+function group 2                 -|
+
+
+
+
+
+
+
+rules to follow
+	- always free memory when not in use
+		- eventaully do so not through kfree but own method
+	- check how many bytes you are reading/writing
+	- check whether u r providing bits or bytes as a param

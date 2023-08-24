@@ -15,6 +15,7 @@ message format for log function
 
 current changes occuring
 ------------------------------------------------------------------
+| IMPORTANT same buffer size for all|  change depending on func  |
 |  custom/ directory                |  renamed to includes/      |
 |  fd member of files.c::kern_file  |  renamed to fp             |
 |  hooks.c::store                   |  renamed to locate_syscall |

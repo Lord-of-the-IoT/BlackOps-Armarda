@@ -40,11 +40,11 @@ static void __exit ModuleExit(void) {
 	remove_hook(&sys_mkdir);
 	remove_hook(&sys_execve);
 	remove_hook(&sys_getdents64);
-	log_msg("[core.c::ModuleExit] removed all hooks");
+	log_msg("[core.c::ModuleExit] removed all hooks\n");
 	remove_server();
-	printk("[rootkit][core.c::ModuleExit] DEBUG    server removed");
+	printk("[rootkit][core.c::ModuleExit] DEBUG    server removed\n");
 	close_logging();
-	printk("[rootkit][core.c::ModuleExit] DEBUG    logging closed removed");
+	printk("[rootkit][core.c::ModuleExit] DEBUG    logging closed removed\n");
 }
 
 module_init(ModuleInit);

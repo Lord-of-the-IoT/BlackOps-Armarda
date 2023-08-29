@@ -69,7 +69,7 @@ class CLI:
         while True:
             try:
                 self.prompt = "BlackOps::home::#>"
-                user_input = input(self.prompt).strip().split()
+                user_input = self.console.input(f"[red]{self.prompt}").strip().split()
                 if user_input == []:
                     continue
                 for command in self.core_commands:
@@ -81,9 +81,9 @@ class CLI:
     def command_connect(self):
         self.prompt = "    BlackOps::connect::#>"
         print("  enter IPv4 adress of the rootkit")
-        address = input(self.prompt)
+        address = self.console.input(f"[red]{self.prompt}")
         print("  Enter port of the rootkit")
-        port = int(input(self.prompt))
+        port = int(self.console.input(f"[red]{self.prompt}"))
         rootkit = tools.Rootkit(address, port)
         rootkit._init_connection_()
         self.connections.append(rootkit)
@@ -102,7 +102,7 @@ class CLI:
     def command_interact(self):
         print("  enter ID or # of the tool to interact with")
         self.prompt = "    BlackOps::interact::#>"
-        user_input = input(self.prompt)
+        user_input = self.console.input(f"[red]{self.prompt}")
         tool = None
         if user_input.isdigit():
             tool = self.connections[int(user_input)-1]
@@ -111,7 +111,7 @@ class CLI:
                 if user_input==tool: break
         while True:
             try:
-                user_input = input(tool.prompt).strip()
+                user_input = self.console.input(f"[red]{tool.prompt}").strip()
                 if user_input == "help":
                     self.command_help(tool)
                 elif user_input == "exit":

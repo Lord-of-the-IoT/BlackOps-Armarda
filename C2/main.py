@@ -1,3 +1,4 @@
+#!/bin/python3.11
 """
 creates the CLI for the user to interact with
 """

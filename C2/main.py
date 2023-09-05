@@ -14,7 +14,7 @@ class CLI:
         self.prompt = "BlackOps::home::#>"
         self.console = Console()
         self.core_commands = [
-            ("help", "display info on all available commands, or information on a command", self.command_help, ["help [command]"]),
+            ("help", "display info on all available commands, or information on a command", self.command_help, ["[command]"]),
             ("clear", "clears the screen", self.command_clear, []),
             ("banner", "display the system banner", self.command_banner, []),
             ("conns", "show all connected tools", self.command_conns, []),
@@ -34,21 +34,22 @@ class CLI:
 
     def command_help(self, tool=None, *args, **kwargs):
         if args==() and kwargs=={}:
-            print("\ncore commands")
-            print("============\n")
-            print("    command            description")
-            print("    -------            -----------")
-            for command in self.core_commands:
-                print(f"    {command[0]:<25}{command[1]}")
-            print("\n")
-            if tool!=None:
+            if tool==None:
+                print("\ncore commands")
+                print("============\n")
+                print("    command                description")
+                print("    -------                -----------")
+                for command in self.core_commands:
+                    print(f"    {' '.join([command[0]]+command[-1]):<25}{command[1]}")
+                print("\n")
+            else:
                 print(f"{tool.help_info[0]}: {tool.help_info[1]}")
                 print(f"{tool.help_info[0]} commands")
                 print("============\n")
-                print("    command            description")
-                print("    -------            -----------")
+                print("    command                description")
+                print("    -------                -----------")
                 for command in tool.commands:
-                    print(f"    {command[0]:<25}{command[1]}")
+                    print(f"    {' '.join([command[0]]+command[-1]):<25}{command[1]}")
             print("\n\n")
 
     def command_clear(self):
@@ -116,7 +117,6 @@ class CLI:
                 if user_input == "help":
                     self.command_help(tool)
                 elif user_input == "exit":
-                    tool.__exit__()
                     return
                 else:
                     result = tool.send(user_input)
@@ -124,7 +124,7 @@ class CLI:
                         continue
                     print(result.decode(errors="replace"))
             except KeyboardInterrupt:
-                print("use command exit to disconnect")
+                print("use command exit to return")
 
 if __name__=="__main__":
     cli = CLI()

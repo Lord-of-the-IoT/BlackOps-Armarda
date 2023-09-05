@@ -3,7 +3,6 @@
 #include <linux/socket.h>
 #include <net/sock.h>
 
-#include <linux/string.h>
 
 extern int BUFFER_SIZE; //size of buffers used
 extern char ROOTKIT_ID[];

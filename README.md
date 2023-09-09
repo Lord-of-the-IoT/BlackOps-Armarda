@@ -6,3 +6,6 @@ an armarda of hacking tools for undetectable post exploitation and exploitation.
 ## **Tools**
 ### C&C server
 a command and control framework, capable of generating payloads and stagers, and managing connections to other tools
+
+### Rootkit
+a linux kernelspace rootkit with remote access 

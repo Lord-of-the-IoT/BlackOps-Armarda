@@ -36,7 +36,7 @@ a Linux kernel module with [remote access](#remote-access-server) for post explo
 
 ## **LKM Build and Installation**
 ### Build
-to build the LKM, install the src directory, and run the Makefile with the `make` command. a number of files will be created, but the rootkit.ko is the important one.
+to build the LKM, download the src and build directories, then move the Makefile in build/ to src/and run the Makefile with the `make` command. a number of files will be created, but the rootkit.ko is the important one.
 ### installation
 if built on a different computer, copy the rootkit.ko file to the target machine, then run `insmod core.ko`. normally requires root priveleges to use `insmod`
 > **Warning**: if compiled on a different OS or kernel version, the rootkit.ko file may not work, as it is OS and Version specific

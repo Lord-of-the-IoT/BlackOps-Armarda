@@ -246,5 +246,9 @@ static int client_handler(void){
 			list_trusted_pids(client.message);
 			net_send();
 		}
+		else {
+			sprintf(client.message, "[server.c::client_handler] command not found!\n");
+			net_send();
+		}
 	}
 }
